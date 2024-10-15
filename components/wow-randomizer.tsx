@@ -1,189 +1,207 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "~/components/ui/card";
-
-const raceClassCombos = [
-  {
-    name: "Orc",
-    slug: "orc",
-    classes: [
-      { name: "Warrior", slug: "warrior" },
-      { name: "Hunter", slug: "hunter" },
-      { name: "Rogue", slug: "rogue" },
-      { name: "Shaman", slug: "shaman" },
-      { name: "Warlock", slug: "warlock" },
-    ],
-  },
-  {
-    name: "Undead",
-    slug: "undead",
-    classes: [
-      { name: "Warrior", slug: "warrior" },
-      { name: "Rogue", slug: "rogue" },
-      { name: "Priest", slug: "priest" },
-      { name: "Mage", slug: "mage" },
-      { name: "Warlock", slug: "warlock" },
-    ],
-  },
-  {
-    name: "Tauren",
-    slug: "tauren",
-    classes: [
-      { name: "Warrior", slug: "warrior" },
-      { name: "Hunter", slug: "hunter" },
-      { name: "Shaman", slug: "shaman" },
-      { name: "Druid", slug: "druid" },
-    ],
-  },
-  {
-    name: "Troll",
-    slug: "troll",
-    classes: [
-      { name: "Warrior", slug: "warrior" },
-      { name: "Hunter", slug: "hunter" },
-      { name: "Rogue", slug: "rogue" },
-      { name: "Priest", slug: "priest" },
-      { name: "Shaman", slug: "shaman" },
-      { name: "Mage", slug: "mage" },
-    ],
-  },
-];
+import ReactConfetti from "react-confetti";
+import { raceClassCombos } from "~/app/race-class-combos";
+import { selectRandomClass, selectRandomRace } from "~/app/actions";
+import { useMutation } from "@tanstack/react-query";
 
 export function WowRandomizer() {
-  const [selectedRace, setSelectedRace] = useState<string>("?");
-  const [selectedClass, setSelectedClass] = useState<{
-    name: string;
-    slug: string;
-  } | null>(null);
-  const [isRaceAnimating, setIsRaceAnimating] = useState(false);
-  const [isClassAnimating, setIsClassAnimating] = useState(false);
+  const [selectedRace, setSelectedRace] = useState<string | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [showRaceConfetti, setShowRaceConfetti] = useState(false);
+  const [showClassConfetti, setShowClassConfetti] = useState(false);
+  const raceCardRef = useRef<HTMLDivElement>(null);
+  const classCardRef = useRef<HTMLDivElement>(null);
 
-  const randomizeRace = () => {
-    setIsRaceAnimating(true);
-    const duration = 2000;
-    const interval = 50;
-    const steps = duration / interval;
-    let step = 0;
+  const raceMutation = useMutation({
+    mutationFn: selectRandomRace,
+    onError: (error) => {
+      console.error("Error selecting random race:", error);
+    },
+  });
 
-    const animation = setInterval(() => {
+  const classMutation = useMutation({
+    mutationFn: selectRandomClass,
+    onError: (error) => {
+      console.error("Error selecting random class:", error);
+    },
+  });
+
+  const randomizeRace = async () => {
+    const interval = 100;
+    let animationInterval: NodeJS.Timeout;
+
+    raceMutation.mutate(undefined, {
+      onSuccess: (data) => {
+        setShowRaceConfetti(true);
+        setTimeout(() => setShowRaceConfetti(false), 3000);
+
+        clearInterval(animationInterval);
+        setSelectedRace(data.slug);
+      },
+    });
+
+    animationInterval = setInterval(() => {
       const randomRace =
         raceClassCombos[Math.floor(Math.random() * raceClassCombos.length)]
           .slug;
       setSelectedRace(randomRace);
-      step++;
-      if (step >= steps) {
-        clearInterval(animation);
-        const finalRace =
-          raceClassCombos[Math.floor(Math.random() * raceClassCombos.length)]
-            .slug;
-        setSelectedRace(finalRace);
-        setIsRaceAnimating(false);
-      }
     }, interval);
   };
 
   const randomizeClass = () => {
-    setIsClassAnimating(true);
-    const duration = 2000;
-    const interval = 50;
-    const steps = duration / interval;
-    let step = 0;
+    const interval = 100;
+    let animationInterval: NodeJS.Timeout;
 
-    const animation = setInterval(() => {
-      const selectedRaceCombo = raceClassCombos.find(
-        (combo) => combo.slug === selectedRace
-      );
-      const availableClasses = selectedRaceCombo
-        ? selectedRaceCombo.classes
-        : [];
+    const selectedRaceCombo = raceClassCombos.find(
+      (combo) => combo.slug === selectedRace
+    );
+    const availableClasses = selectedRaceCombo ? selectedRaceCombo.classes : [];
+
+    classMutation.mutate(undefined, {
+      onSuccess: (data) => {
+        setShowClassConfetti(true);
+        setTimeout(() => setShowClassConfetti(false), 3000);
+
+        clearInterval(animationInterval);
+        setSelectedClass(data.slug);
+      },
+    });
+
+    animationInterval = setInterval(() => {
       const randomClass =
         availableClasses[Math.floor(Math.random() * availableClasses.length)] ||
         null;
-      setSelectedClass(randomClass);
-      step++;
-      if (step >= steps) {
-        clearInterval(animation);
-        const finalClass =
-          availableClasses[
-            Math.floor(Math.random() * availableClasses.length)
-          ] || null;
-        setSelectedClass(finalClass);
-        setIsClassAnimating(false);
-      }
+      setSelectedClass(randomClass ? randomClass.slug : null);
     }, interval);
   };
 
   return (
-    <div className="min-h-screen bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover bg-center flex items-center justify-center">
+    <div className="min-h-screen bg-black bg-cover bg-center flex items-center justify-center">
       <div className="bg-black bg-opacity-80 p-8 rounded-lg shadow-lg max-w-2xl w-full">
-        <h1 className="text-4xl font-bold text-yellow-400 text-center mb-8">
-          World of Warcraft Randomizer
+        <h1 className="text-2xl font-bold text-yellow-400 text-center mb-2">
+          World of Warcraft
         </h1>
+        <h2 className="text-6xl font-semibold text-purple-400 text-center mb-8">
+          OnlyFangs
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card
-            className="relative overflow-hidden group cursor-pointer"
-            onClick={randomizeRace}
-          >
-            <div
-              className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-300 group-hover:scale-110"
-              style={{
-                backgroundImage:
-                  selectedRace !== "?"
-                    ? `url(/races/${selectedRace}.jpeg)`
-                    : "none",
-              }}
-            />
-            <div className="relative z-10 p-6 bg-gray-800 bg-opacity-80 h-full flex flex-col">
-              <h2 className="text-2xl font-semibold text-blue-400 mb-4 text-center">
-                Race
-              </h2>
-              <div className="flex-grow flex items-center justify-center">
-                <span
-                  className={`text-5xl font-bold ${
-                    isRaceAnimating ? "text-green-400" : "text-white"
-                  }`}
-                >
-                  {raceClassCombos.find((combo) => combo.slug === selectedRace)
-                    ?.name ?? "?"}
-                </span>
+          <div ref={raceCardRef} className="relative">
+            {showRaceConfetti && raceCardRef.current && (
+              <div className="absolute inset-0 z-20">
+                <ReactConfetti
+                  width={raceCardRef.current.offsetWidth}
+                  height={raceCardRef.current.offsetHeight}
+                  recycle={false}
+                  numberOfPieces={200}
+                  confettiSource={{
+                    x: 0,
+                    y: 0,
+                    w: raceCardRef.current.offsetWidth,
+                    h: 0,
+                  }}
+                />
               </div>
-              <div className="mt-4 text-center text-white">
-                {isRaceAnimating ? "Randomizing..." : "Click to randomize"}
+            )}
+            <Card
+              className="relative overflow-hidden group cursor-pointer h-64 border-gray-500 hover:bg-gray-300"
+              onClick={randomizeRace}
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-300 group-hover:scale-110"
+                style={{
+                  backgroundImage:
+                    selectedRace !== null
+                      ? `url(/races/${selectedRace}.jpeg)`
+                      : "none",
+                }}
+              />
+              <div className="relative z-10 p-6 bg-gray-800 bg-opacity-80 h-full flex flex-col">
+                <h2 className="text-2xl font-semibold text-blue-400 mb-4 text-center">
+                  Race
+                </h2>
+                <div className="flex-grow flex items-center justify-center">
+                  <span
+                    className={`text-5xl font-bold ${
+                      raceMutation.isPending ? "text-green-400" : "text-white"
+                    }`}
+                  >
+                    {selectedRace
+                      ? raceClassCombos.find(
+                          (combo) => combo.slug === selectedRace
+                        )?.name
+                      : "?"}
+                  </span>
+                </div>
+                {!raceMutation.isSuccess && (
+                  <div className="mt-4 text-center text-white">
+                    {raceMutation.isPending
+                      ? "Randomizing..."
+                      : "Click to randomize"}
+                  </div>
+                )}
               </div>
-            </div>
-          </Card>
-          <Card
-            className="relative overflow-hidden group cursor-pointer"
-            onClick={randomizeClass}
-          >
-            <div
-              className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-300 group-hover:scale-110"
-              style={{
-                backgroundImage:
-                  selectedClass !== null
-                    ? `url(/classes/${selectedClass.slug}.jpg)`
-                    : "none",
-              }}
-            />
-            <div className="relative z-10 p-6 bg-gray-800 bg-opacity-80 h-full flex flex-col">
-              <h2 className="text-2xl font-semibold text-purple-400 mb-4 text-center">
-                Class
-              </h2>
-              <div className="flex-grow flex items-center justify-center">
-                <span
-                  className={`text-5xl font-bold ${
-                    isClassAnimating ? "text-green-400" : "text-white"
-                  }`}
-                >
-                  {selectedClass ? selectedClass.name : "?"}
-                </span>
+            </Card>
+          </div>
+          <div ref={classCardRef} className="relative">
+            {showClassConfetti && classCardRef.current && (
+              <div className="absolute inset-0 z-20">
+                <ReactConfetti
+                  width={classCardRef.current.offsetWidth}
+                  height={classCardRef.current.offsetHeight}
+                  recycle={false}
+                  numberOfPieces={200}
+                  confettiSource={{
+                    x: 0,
+                    y: 0,
+                    w: classCardRef.current.offsetWidth,
+                    h: 0,
+                  }}
+                />
               </div>
-              <div className="mt-4 text-center text-white">
-                {isClassAnimating ? "Randomizing..." : "Click to randomize"}
+            )}
+            <Card
+              className="relative overflow-hidden group cursor-pointer h-64 border-gray-500 hover:bg-gray-300"
+              onClick={randomizeClass}
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-300 group-hover:scale-110"
+                style={{
+                  backgroundImage:
+                    selectedClass !== null
+                      ? `url(/classes/${selectedClass}.jpg)`
+                      : "none",
+                }}
+              />
+              <div className="relative z-10 p-6 bg-gray-800 bg-opacity-80 h-full flex flex-col">
+                <h2 className="text-2xl font-semibold text-purple-400 mb-4 text-center">
+                  Class
+                </h2>
+                <div className="flex-grow flex items-center justify-center">
+                  <span
+                    className={`text-5xl font-bold ${
+                      classMutation.isPending ? "text-green-400" : "text-white"
+                    }`}
+                  >
+                    {selectedClass
+                      ? raceClassCombos
+                          .flatMap((race) => race.classes)
+                          .find((c) => c.slug === selectedClass)?.name ?? "?"
+                      : "?"}
+                  </span>
+                </div>
+                {!classMutation.isSuccess && (
+                  <div className="mt-4 text-center text-white">
+                    {classMutation.isPending
+                      ? "Randomizing..."
+                      : "Click to randomize"}
+                  </div>
+                )}
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
