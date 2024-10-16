@@ -7,7 +7,10 @@ ENV PATH="/root/.bun/bin:$PATH"
 FROM base AS deps
 WORKDIR /app
 COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
+# Add the following line to see more verbose output
+# RUN bun install --frozen-lockfile --verbose
+# If the above fails, try running without --frozen-lockfile
+RUN bun install --verbose
 
 # Stage 2: Build the application
 FROM base AS builder
