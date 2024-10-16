@@ -3,6 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import ReactConfetti from "react-confetti";
+import { toast } from "sonner";
 import { selectRandomClass, selectRandomRace } from "~/app/actions";
 import { raceClassCombos } from "~/app/race-class-combos";
 import { Card } from "~/components/ui/card";
@@ -19,6 +20,7 @@ export function WowRandomizer() {
     mutationFn: selectRandomRace,
     onError: (error) => {
       console.error("Error selecting random race:", error);
+      toast("Failed to select a random race. Please try again.");
     },
   });
 
@@ -26,6 +28,7 @@ export function WowRandomizer() {
     mutationFn: selectRandomClass,
     onError: (error) => {
       console.error("Error selecting random class:", error);
+      toast("Failed to select a random class. Please try again.");
     },
   });
 
