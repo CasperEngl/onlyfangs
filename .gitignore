@@ -36,7 +36,7 @@ yarn-error.log*
 next-env.d.ts
 
 # db
-**/db/query_sql.ts
+# **/db/query_sql.ts
 db_data
 
 # env
