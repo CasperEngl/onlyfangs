@@ -1,14 +1,14 @@
 services:
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - DATABASE_URL=mysql://root:rootpassword@db:3306/onlyfangs
-  #   depends_on:
-  #     - db
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=mysql://root:rootpassword@db:3306/onlyfangs
+    depends_on:
+      - db
 
   db:
     image: mysql:8.0
