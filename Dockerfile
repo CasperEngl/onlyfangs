@@ -1,5 +1,7 @@
 FROM oven/bun:alpine AS base
 
+ENV PATH="/root/.bun/bin:$PATH"
+
 # Stage 1: Install dependencies
 FROM base AS deps
 WORKDIR /app
