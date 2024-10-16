@@ -1,7 +1,6 @@
+# Stage 0: Install bun
 FROM node:20 AS base
-
 RUN curl -fsSL https://bun.sh/install | bash
-
 ENV PATH="/root/.bun/bin:$PATH"
 
 # Stage 1: Install dependencies
