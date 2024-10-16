@@ -10,8 +10,6 @@ export default async function Home() {
     id: 1,
   });
 
-  console.log(playerClass, playerRace);
-
   return (
     <WowRandomizer
       playerClass={playerClass?.slug}
