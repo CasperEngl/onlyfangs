@@ -19,14 +19,14 @@ export async function GET(request: NextRequest) {
   }
 
   const player = await getPlayerByInviteCode(pool, {
-    code: inviteCode,
+    code: inviteCode.code,
   });
 
   if (!player) {
     return new Response("Invalid invite code", { status: 400 });
   }
 
-  cookies().set("invite_code", inviteCode, {
+  cookies().set("invite_code", inviteCode.code, {
     httpOnly: true,
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
