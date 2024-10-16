@@ -8,6 +8,7 @@ export const pool = mysql.createPool(
         password: "rootpassword",
         port: 3306,
         database: "onlyfangs",
+        host: "db",
       }
     : {
         uri: process.env.DATABASE_URL,
