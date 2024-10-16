@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Card } from "~/components/ui/card";
-import ReactConfetti from "react-confetti";
-import { raceClassCombos } from "~/app/race-class-combos";
-import { selectRandomClass, selectRandomRace } from "~/app/actions";
 import { useMutation } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import ReactConfetti from "react-confetti";
+import { selectRandomClass, selectRandomRace } from "~/app/actions";
+import { raceClassCombos } from "~/app/race-class-combos";
+import { Card } from "~/components/ui/card";
 
 export function WowRandomizer() {
   const [selectedRace, setSelectedRace] = useState<string | null>(null);
@@ -31,7 +31,12 @@ export function WowRandomizer() {
 
   const randomizeRace = async () => {
     const interval = 100;
-    let animationInterval: NodeJS.Timeout;
+    const animationInterval = setInterval(() => {
+      const randomRace =
+        raceClassCombos[Math.floor(Math.random() * raceClassCombos.length)]
+          .slug;
+      setSelectedRace(randomRace);
+    }, interval);
 
     raceMutation.mutate(undefined, {
       onSuccess: (data) => {
@@ -42,18 +47,16 @@ export function WowRandomizer() {
         setSelectedRace(data.slug);
       },
     });
-
-    animationInterval = setInterval(() => {
-      const randomRace =
-        raceClassCombos[Math.floor(Math.random() * raceClassCombos.length)]
-          .slug;
-      setSelectedRace(randomRace);
-    }, interval);
   };
 
   const randomizeClass = () => {
     const interval = 100;
-    let animationInterval: NodeJS.Timeout;
+    const animationInterval = setInterval(() => {
+      const randomClass =
+        availableClasses[Math.floor(Math.random() * availableClasses.length)] ||
+        null;
+      setSelectedClass(randomClass ? randomClass.slug : null);
+    }, interval);
 
     const selectedRaceCombo = raceClassCombos.find(
       (combo) => combo.slug === selectedRace
@@ -69,13 +72,6 @@ export function WowRandomizer() {
         setSelectedClass(data.slug);
       },
     });
-
-    animationInterval = setInterval(() => {
-      const randomClass =
-        availableClasses[Math.floor(Math.random() * availableClasses.length)] ||
-        null;
-      setSelectedClass(randomClass ? randomClass.slug : null);
-    }, interval);
   };
 
   return (

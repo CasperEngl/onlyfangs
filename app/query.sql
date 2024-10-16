@@ -1,26 +1,113 @@
 -- name: GetPlayers :many
-SELECT * FROM players;
+SELECT
+  *
+FROM
+  players;
 
 -- name: GetPlayerById :one
-SELECT * FROM players WHERE id = ?;
+SELECT
+  *
+FROM
+  players
+WHERE
+  id = ?;
+
+-- name: ConsumeInviteCode :exec
+UPDATE invite_codes
+SET
+  used_at = CURRENT_TIMESTAMP
+WHERE
+  code = ?
+  AND used_at IS NULL;
+
+-- name: GetPlayerByInviteCode :one
+SELECT
+  *
+FROM
+  players
+WHERE
+  invite_code_id = (
+    SELECT
+      id
+    FROM
+      invite_codes
+    WHERE
+      code = ?
+  );
 
 -- name: CreatePlayer :execresult
-INSERT INTO players (username, invite_code, race_id, class_id, created_by)
-VALUES (?, ?, ?, ?, ?);
-
--- name: UpdatePlayer :exec
-UPDATE players
-SET username = ?, invite_code = ?, race_id = ?, class_id = ?, created_by = ?
-WHERE id = ?;
+INSERT INTO
+  players (username, invite_code_id, race_id, class_id)
+VALUES
+  (
+    ?,
+    (
+      SELECT
+        id
+      FROM
+        invite_codes
+      WHERE
+        code = ?
+    ),
+    ?,
+    ?
+  );
 
 -- name: DeletePlayer :exec
-DELETE FROM players WHERE id = ?;
+DELETE FROM players
+WHERE
+  id = ?;
 
--- name: AddPlayerRace :exec
+-- name: SetPlayerRace :exec
 UPDATE players
-SET race_id = ?
-WHERE id = ?;
+SET
+  race_id = ?
+WHERE
+  id = ?;
 
--- name: AddPlayerClass :exec
+-- name: SetPlayerClass :exec
 UPDATE players
-SET class_id = ? WHERE id = ?;
+SET
+  class_id = ?
+WHERE
+  id = ?;
+
+-- name: GetPlayerRace :one
+SELECT
+  races.name,
+  races.slug
+FROM
+  players
+  INNER JOIN races ON races.id = players.race_id
+WHERE
+  players.id = ?;
+
+-- name: GetPlayerClass :one
+SELECT
+  classes.name,
+  classes.slug
+FROM
+  players
+  INNER JOIN classes ON classes.id = players.class_id
+WHERE
+  players.id = ?;
+
+-- name: GetRaces :many
+SELECT
+  *
+FROM
+  races;
+
+-- name: GetClasses :many
+SELECT
+  *
+FROM
+  classes;
+
+-- name: GetInviteCode :one
+SELECT
+  *
+FROM
+  invite_codes
+WHERE
+  code = ?;
