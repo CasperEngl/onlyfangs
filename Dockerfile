@@ -1,4 +1,4 @@
-FROM oven/bun:alpine AS base
+FROM node:20 AS base
 
 RUN curl -fsSL https://bun.sh/install | bash
 
