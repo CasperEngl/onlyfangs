@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import {
   getClasses,
@@ -47,6 +48,8 @@ export async function selectRandomRace() {
     id: player.id,
     raceId: raceId,
   });
+
+  revalidatePath("/");
 
   return randomRace;
 }
@@ -105,6 +108,8 @@ export async function selectRandomClass() {
     id: player.id,
     classId: classId,
   });
+
+  revalidatePath("/");
 
   return randomClass;
 }
