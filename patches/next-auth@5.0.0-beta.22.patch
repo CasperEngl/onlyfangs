@@ -1,0 +1,1087 @@
+diff --git a/lib/actions.js b/lib/actions.js
+index 7439f9cf46108cccccb610f2933c92e2f5d4c088..960f9206d32b8378203bf702cc375edb35b55227 100644
+--- a/lib/actions.js
++++ b/lib/actions.js
+@@ -3,81 +3,102 @@ import { Auth, raw, skipCSRFCheck, createActionURL } from "@auth/core";
+ import { headers as nextHeaders, cookies } from "next/headers";
+ // @ts-expect-error Next.js does not yet correctly use the `package.json#exports` field
+ import { redirect } from "next/navigation";
+-export async function signIn(provider, options = {}, authorizationParams, config) {
+-    const headers = new Headers(nextHeaders());
+-    const { redirect: shouldRedirect = true, redirectTo, ...rest } = options instanceof FormData ? Object.fromEntries(options) : options;
+-    const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/";
+-    const signInURL = createActionURL("signin", 
++export async function signIn(
++  provider,
++  options = {},
++  authorizationParams,
++  config
++) {
++  const headers = new Headers(await nextHeaders());
++  const {
++    redirect: shouldRedirect = true,
++    redirectTo,
++    ...rest
++  } = options instanceof FormData ? Object.fromEntries(options) : options;
++  const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/";
++  const signInURL = createActionURL(
++    "signin",
+     // @ts-expect-error `x-forwarded-proto` is not nullable, next.js sets it by default
+-    headers.get("x-forwarded-proto"), headers, process.env, config);
+-    if (!provider) {
+-        signInURL.searchParams.append("callbackUrl", callbackUrl);
+-        if (shouldRedirect)
+-            redirect(signInURL.toString());
+-        return signInURL.toString();
++    headers.get("x-forwarded-proto"),
++    headers,
++    process.env,
++    config
++  );
++  if (!provider) {
++    signInURL.searchParams.append("callbackUrl", callbackUrl);
++    if (shouldRedirect) redirect(signInURL.toString());
++    return signInURL.toString();
++  }
++  let url = `${signInURL}/${provider}?${new URLSearchParams(
++    authorizationParams
++  )}`;
++  let foundProvider = {};
++  for (const providerConfig of config.providers) {
++    const { options, ...defaults } =
++      typeof providerConfig === "function" ? providerConfig() : providerConfig;
++    const id = options?.id ?? defaults.id;
++    if (id === provider) {
++      foundProvider = {
++        id,
++        type: options?.type ?? defaults.type,
++      };
++      break;
+     }
+-    let url = `${signInURL}/${provider}?${new URLSearchParams(authorizationParams)}`;
+-    let foundProvider = {};
+-    for (const providerConfig of config.providers) {
+-        const { options, ...defaults } = typeof providerConfig === "function" ? providerConfig() : providerConfig;
+-        const id = options?.id ?? defaults.id;
+-        if (id === provider) {
+-            foundProvider = {
+-                id,
+-                type: options?.type ?? defaults.type,
+-            };
+-            break;
+-        }
+-    }
+-    if (!foundProvider.id) {
+-        const url = `${signInURL}?${new URLSearchParams({ callbackUrl })}`;
+-        if (shouldRedirect)
+-            redirect(url);
+-        return url;
+-    }
+-    if (foundProvider.type === "credentials") {
+-        url = url.replace("signin", "callback");
+-    }
+-    headers.set("Content-Type", "application/x-www-form-urlencoded");
+-    const body = new URLSearchParams({ ...rest, callbackUrl });
+-    const req = new Request(url, { method: "POST", headers, body });
+-    const res = await Auth(req, { ...config, raw, skipCSRFCheck });
+-    for (const c of res?.cookies ?? [])
+-        cookies().set(c.name, c.value, c.options);
+-    const responseUrl = res instanceof Response ? res.headers.get("Location") : res.redirect;
+-    // NOTE: if for some unexpected reason the responseUrl is not set,
+-    // we redirect to the original url
+-    const redirectUrl = responseUrl ?? url;
+-    if (shouldRedirect)
+-        return redirect(redirectUrl);
+-    return redirectUrl;
++  }
++  if (!foundProvider.id) {
++    const url = `${signInURL}?${new URLSearchParams({ callbackUrl })}`;
++    if (shouldRedirect) redirect(url);
++    return url;
++  }
++  if (foundProvider.type === "credentials") {
++    url = url.replace("signin", "callback");
++  }
++  headers.set("Content-Type", "application/x-www-form-urlencoded");
++  const body = new URLSearchParams({ ...rest, callbackUrl });
++  const req = new Request(url, { method: "POST", headers, body });
++  const res = await Auth(req, { ...config, raw, skipCSRFCheck });
++  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options);
++  const responseUrl =
++    res instanceof Response ? res.headers.get("Location") : res.redirect;
++  // NOTE: if for some unexpected reason the responseUrl is not set,
++  // we redirect to the original url
++  const redirectUrl = responseUrl ?? url;
++  if (shouldRedirect) return redirect(redirectUrl);
++  return redirectUrl;
+ }
+ export async function signOut(options, config) {
+-    const headers = new Headers(nextHeaders());
+-    headers.set("Content-Type", "application/x-www-form-urlencoded");
+-    const url = createActionURL("signout", 
++  const headers = new Headers(await nextHeaders());
++  headers.set("Content-Type", "application/x-www-form-urlencoded");
++  const url = createActionURL(
++    "signout",
+     // @ts-expect-error `x-forwarded-proto` is not nullable, next.js sets it by default
+-    headers.get("x-forwarded-proto"), headers, process.env, config);
+-    const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/";
+-    const body = new URLSearchParams({ callbackUrl });
+-    const req = new Request(url, { method: "POST", headers, body });
+-    const res = await Auth(req, { ...config, raw, skipCSRFCheck });
+-    for (const c of res?.cookies ?? [])
+-        cookies().set(c.name, c.value, c.options);
+-    if (options?.redirect ?? true)
+-        return redirect(res.redirect);
+-    return res;
++    headers.get("x-forwarded-proto"),
++    headers,
++    process.env,
++    config
++  );
++  const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/";
++  const body = new URLSearchParams({ callbackUrl });
++  const req = new Request(url, { method: "POST", headers, body });
++  const res = await Auth(req, { ...config, raw, skipCSRFCheck });
++  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options);
++  if (options?.redirect ?? true) return redirect(res.redirect);
++  return res;
+ }
+ export async function update(data, config) {
+-    const headers = new Headers(nextHeaders());
+-    headers.set("Content-Type", "application/json");
+-    const url = createActionURL("session", 
++  const headers = new Headers(await nextHeaders());
++  headers.set("Content-Type", "application/json");
++  const url = createActionURL(
++    "session",
+     // @ts-expect-error `x-forwarded-proto` is not nullable, next.js sets it by default
+-    headers.get("x-forwarded-proto"), headers, process.env, config);
+-    const body = JSON.stringify({ data });
+-    const req = new Request(url, { method: "POST", headers, body });
+-    const res = await Auth(req, { ...config, raw, skipCSRFCheck });
+-    for (const c of res?.cookies ?? [])
+-        cookies().set(c.name, c.value, c.options);
+-    return res.body;
++    headers.get("x-forwarded-proto"),
++    headers,
++    process.env,
++    config
++  );
++  const body = JSON.stringify({ data });
++  const req = new Request(url, { method: "POST", headers, body });
++  const res = await Auth(req, { ...config, raw, skipCSRFCheck });
++  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options);
++  return res.body;
+ }
+diff --git a/lib/index.js b/lib/index.js
+index befa3370959cc66dc4f6c9dd9d5de23e9d2cba5b..6dc81441721a606a9b41f18380b2e0a82f78a8db 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -5,183 +5,195 @@ import { headers } from "next/headers";
+ import { NextResponse } from "next/server";
+ import { reqWithEnvURL } from "./env.js";
+ async function getSession(headers, config) {
+-    const url = createActionURL("session", 
++  const url = createActionURL(
++    "session",
+     // @ts-expect-error `x-forwarded-proto` is not nullable, next.js sets it by default
+-    headers.get("x-forwarded-proto"), headers, process.env, config);
+-    const request = new Request(url, {
+-        headers: { cookie: headers.get("cookie") ?? "" },
+-    });
+-    return Auth(request, {
+-        ...config,
+-        callbacks: {
+-            ...config.callbacks,
+-            // Since we are server-side, we don't need to filter out the session data
+-            // See https://authjs.dev/getting-started/migrating-to-v5#authenticating-server-side
+-            // TODO: Taint the session data to prevent accidental leakage to the client
+-            // https://react.dev/reference/react/experimental_taintObjectReference
+-            async session(...args) {
+-                const session = 
+-                // If the user defined a custom session callback, use that instead
+-                (await config.callbacks?.session?.(...args)) ?? {
+-                    ...args[0].session,
+-                    expires: args[0].session.expires?.toISOString?.() ??
+-                        args[0].session.expires,
+-                };
+-                const user = args[0].user ?? args[0].token;
+-                return { user, ...session };
+-            },
+-        },
+-    });
++    headers.get("x-forwarded-proto"),
++    headers,
++    process.env,
++    config
++  );
++  const request = new Request(url, {
++    headers: { cookie: headers.get("cookie") ?? "" },
++  });
++  return Auth(request, {
++    ...config,
++    callbacks: {
++      ...config.callbacks,
++      // Since we are server-side, we don't need to filter out the session data
++      // See https://authjs.dev/getting-started/migrating-to-v5#authenticating-server-side
++      // TODO: Taint the session data to prevent accidental leakage to the client
++      // https://react.dev/reference/react/experimental_taintObjectReference
++      async session(...args) {
++        const session =
++          // If the user defined a custom session callback, use that instead
++          (await config.callbacks?.session?.(...args)) ?? {
++            ...args[0].session,
++            expires:
++              args[0].session.expires?.toISOString?.() ??
++              args[0].session.expires,
++          };
++        const user = args[0].user ?? args[0].token;
++        return { user, ...session };
++      },
++    },
++  });
+ }
+ function isReqWrapper(arg) {
+-    return typeof arg === "function";
++  return typeof arg === "function";
+ }
+-export function initAuth(config, onLazyLoad // To set the default env vars
++export function initAuth(
++  config,
++  onLazyLoad // To set the default env vars
+ ) {
+-    if (typeof config === "function") {
++  if (typeof config === "function") {
++    return async (...args) => {
++      if (!args.length) {
++        // React Server Components
++        const _headers = await headers();
++        const _config = await config(undefined); // Review: Should we pass headers() here instead?
++        onLazyLoad?.(_config);
++        return getSession(_headers, _config).then((r) => r.json());
++      }
++      if (args[0] instanceof Request) {
++        // middleware.ts inline
++        // export { auth as default } from "auth"
++        const req = args[0];
++        const ev = args[1];
++        const _config = await config(req);
++        onLazyLoad?.(_config);
++        // args[0] is supposed to be NextRequest but the instanceof check is failing.
++        return handleAuth([req, ev], _config);
++      }
++      if (isReqWrapper(args[0])) {
++        // middleware.ts wrapper/route.ts
++        // import { auth } from "auth"
++        // export default auth((req) => { console.log(req.auth) }})
++        const userMiddlewareOrRoute = args[0];
+         return async (...args) => {
+-            if (!args.length) {
+-                // React Server Components
+-                const _headers = headers();
+-                const _config = await config(undefined); // Review: Should we pass headers() here instead?
+-                onLazyLoad?.(_config);
+-                return getSession(_headers, _config).then((r) => r.json());
+-            }
+-            if (args[0] instanceof Request) {
+-                // middleware.ts inline
+-                // export { auth as default } from "auth"
+-                const req = args[0];
+-                const ev = args[1];
+-                const _config = await config(req);
+-                onLazyLoad?.(_config);
+-                // args[0] is supposed to be NextRequest but the instanceof check is failing.
+-                return handleAuth([req, ev], _config);
+-            }
+-            if (isReqWrapper(args[0])) {
+-                // middleware.ts wrapper/route.ts
+-                // import { auth } from "auth"
+-                // export default auth((req) => { console.log(req.auth) }})
+-                const userMiddlewareOrRoute = args[0];
+-                return async (...args) => {
+-                    const _config = await config(args[0]);
+-                    onLazyLoad?.(_config);
+-                    return handleAuth(args, _config, userMiddlewareOrRoute);
+-                };
+-            }
+-            // API Routes, getServerSideProps
+-            const request = "req" in args[0] ? args[0].req : args[0];
+-            const response = "res" in args[0] ? args[0].res : args[1];
+-            const _config = await config(request);
+-            onLazyLoad?.(_config);
+-            // @ts-expect-error -- request is NextRequest
+-            return getSession(new Headers(request.headers), _config).then(async (authResponse) => {
+-                const auth = await authResponse.json();
+-                for (const cookie of authResponse.headers.getSetCookie())
+-                    if ("headers" in response)
+-                        response.headers.append("set-cookie", cookie);
+-                    else
+-                        response.appendHeader("set-cookie", cookie);
+-                return auth;
+-            });
++          const _config = await config(args[0]);
++          onLazyLoad?.(_config);
++          return handleAuth(args, _config, userMiddlewareOrRoute);
+         };
+-    }
+-    return (...args) => {
+-        if (!args.length) {
+-            // React Server Components
+-            return getSession(headers(), config).then((r) => r.json());
+-        }
+-        if (args[0] instanceof Request) {
+-            // middleware.ts inline
+-            // export { auth as default } from "auth"
+-            const req = args[0];
+-            const ev = args[1];
+-            return handleAuth([req, ev], config);
++      }
++      // API Routes, getServerSideProps
++      const request = "req" in args[0] ? args[0].req : args[0];
++      const response = "res" in args[0] ? args[0].res : args[1];
++      const _config = await config(request);
++      onLazyLoad?.(_config);
++      // @ts-expect-error -- request is NextRequest
++      return getSession(new Headers(request.headers), _config).then(
++        async (authResponse) => {
++          const auth = await authResponse.json();
++          for (const cookie of authResponse.headers.getSetCookie())
++            if ("headers" in response)
++              response.headers.append("set-cookie", cookie);
++            else response.appendHeader("set-cookie", cookie);
++          return auth;
+         }
+-        if (isReqWrapper(args[0])) {
+-            // middleware.ts wrapper/route.ts
+-            // import { auth } from "auth"
+-            // export default auth((req) => { console.log(req.auth) }})
+-            const userMiddlewareOrRoute = args[0];
+-            return async (...args) => {
+-                return handleAuth(args, config, userMiddlewareOrRoute).then((res) => {
+-                    return res;
+-                });
+-            };
+-        }
+-        // API Routes, getServerSideProps
+-        const request = "req" in args[0] ? args[0].req : args[0];
+-        const response = "res" in args[0] ? args[0].res : args[1];
+-        return getSession(
+-        // @ts-expect-error
+-        new Headers(request.headers), config).then(async (authResponse) => {
+-            const auth = await authResponse.json();
+-            for (const cookie of authResponse.headers.getSetCookie())
+-                if ("headers" in response)
+-                    response.headers.append("set-cookie", cookie);
+-                else
+-                    response.appendHeader("set-cookie", cookie);
+-            return auth;
+-        });
++      );
+     };
+-}
+-async function handleAuth(args, config, userMiddlewareOrRoute) {
+-    const request = reqWithEnvURL(args[0]);
+-    const sessionResponse = await getSession(request.headers, config);
+-    const auth = await sessionResponse.json();
+-    let authorized = true;
+-    if (config.callbacks?.authorized) {
+-        authorized = await config.callbacks.authorized({ request, auth });
++  }
++  return async (...args) => {
++    if (!args.length) {
++      // React Server Components
++      return getSession(await headers(), config).then((r) => r.json());
+     }
+-    let response = NextResponse.next?.();
+-    if (authorized instanceof Response) {
+-        // User returned a custom response, like redirecting to a page or 401, respect it
+-        response = authorized;
+-        const redirect = authorized.headers.get("Location");
+-        const { pathname } = request.nextUrl;
+-        // If the user is redirecting to the same NextAuth.js action path as the current request,
+-        // don't allow the redirect to prevent an infinite loop
+-        if (redirect &&
+-            isSameAuthAction(pathname, new URL(redirect).pathname, config)) {
+-            authorized = true;
+-        }
++    if (args[0] instanceof Request) {
++      // middleware.ts inline
++      // export { auth as default } from "auth"
++      const req = args[0];
++      const ev = args[1];
++      return handleAuth([req, ev], config);
+     }
+-    else if (userMiddlewareOrRoute) {
+-        // Execute user's middleware/handler with the augmented request
+-        const augmentedReq = request;
+-        augmentedReq.auth = auth;
+-        response =
+-            (await userMiddlewareOrRoute(augmentedReq, args[1])) ??
+-                NextResponse.next();
++    if (isReqWrapper(args[0])) {
++      // middleware.ts wrapper/route.ts
++      // import { auth } from "auth"
++      // export default auth((req) => { console.log(req.auth) }})
++      const userMiddlewareOrRoute = args[0];
++      return async (...args) => {
++        return handleAuth(args, config, userMiddlewareOrRoute).then((res) => {
++          return res;
++        });
++      };
+     }
+-    else if (!authorized) {
+-        const signInPage = config.pages?.signIn ?? `${config.basePath}/signin`;
+-        if (request.nextUrl.pathname !== signInPage) {
+-            // Redirect to signin page by default if not authorized
+-            const signInUrl = request.nextUrl.clone();
+-            signInUrl.pathname = signInPage;
+-            signInUrl.searchParams.set("callbackUrl", request.nextUrl.href);
+-            response = NextResponse.redirect(signInUrl);
+-        }
++    // API Routes, getServerSideProps
++    const request = "req" in args[0] ? args[0].req : args[0];
++    const response = "res" in args[0] ? args[0].res : args[1];
++    return getSession(
++      // @ts-expect-error
++      new Headers(request.headers),
++      config
++    ).then(async (authResponse) => {
++      const auth = await authResponse.json();
++      for (const cookie of authResponse.headers.getSetCookie())
++        if ("headers" in response)
++          response.headers.append("set-cookie", cookie);
++        else response.appendHeader("set-cookie", cookie);
++      return auth;
++    });
++  };
++}
++async function handleAuth(args, config, userMiddlewareOrRoute) {
++  const request = reqWithEnvURL(args[0]);
++  const sessionResponse = await getSession(request.headers, config);
++  const auth = await sessionResponse.json();
++  let authorized = true;
++  if (config.callbacks?.authorized) {
++    authorized = await config.callbacks.authorized({ request, auth });
++  }
++  let response = NextResponse.next?.();
++  if (authorized instanceof Response) {
++    // User returned a custom response, like redirecting to a page or 401, respect it
++    response = authorized;
++    const redirect = authorized.headers.get("Location");
++    const { pathname } = request.nextUrl;
++    // If the user is redirecting to the same NextAuth.js action path as the current request,
++    // don't allow the redirect to prevent an infinite loop
++    if (
++      redirect &&
++      isSameAuthAction(pathname, new URL(redirect).pathname, config)
++    ) {
++      authorized = true;
+     }
+-    const finalResponse = new Response(response?.body, response);
+-    // Preserve cookies from the session response
+-    for (const cookie of sessionResponse.headers.getSetCookie())
+-        finalResponse.headers.append("set-cookie", cookie);
+-    return finalResponse;
++  } else if (userMiddlewareOrRoute) {
++    // Execute user's middleware/handler with the augmented request
++    const augmentedReq = request;
++    augmentedReq.auth = auth;
++    response =
++      (await userMiddlewareOrRoute(augmentedReq, args[1])) ??
++      NextResponse.next();
++  } else if (!authorized) {
++    const signInPage = config.pages?.signIn ?? `${config.basePath}/signin`;
++    if (request.nextUrl.pathname !== signInPage) {
++      // Redirect to signin page by default if not authorized
++      const signInUrl = request.nextUrl.clone();
++      signInUrl.pathname = signInPage;
++      signInUrl.searchParams.set("callbackUrl", request.nextUrl.href);
++      response = NextResponse.redirect(signInUrl);
++    }
++  }
++  const finalResponse = new Response(response?.body, response);
++  // Preserve cookies from the session response
++  for (const cookie of sessionResponse.headers.getSetCookie())
++    finalResponse.headers.append("set-cookie", cookie);
++  return finalResponse;
+ }
+ function isSameAuthAction(requestPath, redirectPath, config) {
+-    const action = redirectPath.replace(`${requestPath}/`, "");
+-    const pages = Object.values(config.pages ?? {});
+-    return ((actions.has(action) || pages.includes(redirectPath)) &&
+-        redirectPath === requestPath);
++  const action = redirectPath.replace(`${requestPath}/`, "");
++  const pages = Object.values(config.pages ?? {});
++  return (
++    (actions.has(action) || pages.includes(redirectPath)) &&
++    redirectPath === requestPath
++  );
+ }
+ const actions = new Set([
+-    "providers",
+-    "session",
+-    "csrf",
+-    "signin",
+-    "signout",
+-    "callback",
+-    "verify-request",
+-    "error",
++  "providers",
++  "session",
++  "csrf",
++  "signin",
++  "signout",
++  "callback",
++  "verify-request",
++  "error",
+ ]);
+diff --git a/src/lib/actions.ts b/src/lib/actions.ts
+index ff0a7322625561d4c393d09e789ec4fbe771b7c0..a6d11c2bd5fbbd0439e510e202b59734a3e0224f 100644
+--- a/src/lib/actions.ts
++++ b/src/lib/actions.ts
+@@ -1,28 +1,28 @@
+-import { Auth, raw, skipCSRFCheck, createActionURL } from "@auth/core"
++import { Auth, raw, skipCSRFCheck, createActionURL } from "@auth/core";
+ // @ts-expect-error Next.js does not yet correctly use the `package.json#exports` field
+-import { headers as nextHeaders, cookies } from "next/headers"
++import { headers as nextHeaders, cookies } from "next/headers";
+ // @ts-expect-error Next.js does not yet correctly use the `package.json#exports` field
+-import { redirect } from "next/navigation"
++import { redirect } from "next/navigation";
+ 
+-import type { NextAuthConfig } from "./index.js"
+-import type { NextAuthResult, Session } from "../index.js"
+-import type { ProviderType } from "@auth/core/providers"
++import type { NextAuthConfig } from "./index.js";
++import type { NextAuthResult, Session } from "../index.js";
++import type { ProviderType } from "@auth/core/providers";
+ 
+-type SignInParams = Parameters<NextAuthResult["signIn"]>
++type SignInParams = Parameters<NextAuthResult["signIn"]>;
+ export async function signIn(
+   provider: SignInParams[0],
+   options: SignInParams[1] = {},
+   authorizationParams: SignInParams[2],
+   config: NextAuthConfig
+ ) {
+-  const headers = new Headers(nextHeaders())
++  const headers = new Headers(await nextHeaders());
+   const {
+     redirect: shouldRedirect = true,
+     redirectTo,
+     ...rest
+-  } = options instanceof FormData ? Object.fromEntries(options) : options
++  } = options instanceof FormData ? Object.fromEntries(options) : options;
+ 
+-  const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/"
++  const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/";
+   const signInURL = createActionURL(
+     "signin",
+     // @ts-expect-error `x-forwarded-proto` is not nullable, next.js sets it by default
+@@ -30,68 +30,68 @@ export async function signIn(
+     headers,
+     process.env,
+     config
+-  )
++  );
+ 
+   if (!provider) {
+-    signInURL.searchParams.append("callbackUrl", callbackUrl)
+-    if (shouldRedirect) redirect(signInURL.toString())
+-    return signInURL.toString()
++    signInURL.searchParams.append("callbackUrl", callbackUrl);
++    if (shouldRedirect) redirect(signInURL.toString());
++    return signInURL.toString();
+   }
+ 
+   let url = `${signInURL}/${provider}?${new URLSearchParams(
+     authorizationParams
+-  )}`
+-  let foundProvider: { id?: SignInParams[0]; type?: ProviderType } = {}
++  )}`;
++  let foundProvider: { id?: SignInParams[0]; type?: ProviderType } = {};
+ 
+   for (const providerConfig of config.providers) {
+     const { options, ...defaults } =
+-      typeof providerConfig === "function" ? providerConfig() : providerConfig
+-    const id = (options?.id as string | undefined) ?? defaults.id
++      typeof providerConfig === "function" ? providerConfig() : providerConfig;
++    const id = (options?.id as string | undefined) ?? defaults.id;
+     if (id === provider) {
+       foundProvider = {
+         id,
+         type: (options?.type as ProviderType | undefined) ?? defaults.type,
+-      }
+-      break
++      };
++      break;
+     }
+   }
+ 
+   if (!foundProvider.id) {
+-    const url = `${signInURL}?${new URLSearchParams({ callbackUrl })}`
+-    if (shouldRedirect) redirect(url)
+-    return url
++    const url = `${signInURL}?${new URLSearchParams({ callbackUrl })}`;
++    if (shouldRedirect) redirect(url);
++    return url;
+   }
+ 
+   if (foundProvider.type === "credentials") {
+-    url = url.replace("signin", "callback")
++    url = url.replace("signin", "callback");
+   }
+ 
+-  headers.set("Content-Type", "application/x-www-form-urlencoded")
+-  const body = new URLSearchParams({ ...rest, callbackUrl })
+-  const req = new Request(url, { method: "POST", headers, body })
+-  const res = await Auth(req, { ...config, raw, skipCSRFCheck })
++  headers.set("Content-Type", "application/x-www-form-urlencoded");
++  const body = new URLSearchParams({ ...rest, callbackUrl });
++  const req = new Request(url, { method: "POST", headers, body });
++  const res = await Auth(req, { ...config, raw, skipCSRFCheck });
+ 
+-  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options)
++  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options);
+ 
+   const responseUrl =
+-    res instanceof Response ? res.headers.get("Location") : res.redirect
++    res instanceof Response ? res.headers.get("Location") : res.redirect;
+ 
+   // NOTE: if for some unexpected reason the responseUrl is not set,
+   // we redirect to the original url
+-  const redirectUrl = responseUrl ?? url
++  const redirectUrl = responseUrl ?? url;
+ 
+-  if (shouldRedirect) return redirect(redirectUrl)
++  if (shouldRedirect) return redirect(redirectUrl);
+ 
+-  return redirectUrl as any
++  return redirectUrl as any;
+ }
+ 
+-type SignOutParams = Parameters<NextAuthResult["signOut"]>
++type SignOutParams = Parameters<NextAuthResult["signOut"]>;
+ export async function signOut(
+   options: SignOutParams[0],
+   config: NextAuthConfig
+ ) {
+-  const headers = new Headers(nextHeaders())
+-  headers.set("Content-Type", "application/x-www-form-urlencoded")
++  const headers = new Headers(await nextHeaders());
++  headers.set("Content-Type", "application/x-www-form-urlencoded");
+ 
+   const url = createActionURL(
+     "signout",
+@@ -100,27 +100,27 @@ export async function signOut(
+     headers,
+     process.env,
+     config
+-  )
+-  const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/"
+-  const body = new URLSearchParams({ callbackUrl })
+-  const req = new Request(url, { method: "POST", headers, body })
++  );
++  const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/";
++  const body = new URLSearchParams({ callbackUrl });
++  const req = new Request(url, { method: "POST", headers, body });
+ 
+-  const res = await Auth(req, { ...config, raw, skipCSRFCheck })
++  const res = await Auth(req, { ...config, raw, skipCSRFCheck });
+ 
+-  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options)
++  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options);
+ 
+-  if (options?.redirect ?? true) return redirect(res.redirect!)
++  if (options?.redirect ?? true) return redirect(res.redirect!);
+ 
+-  return res as any
++  return res as any;
+ }
+ 
+-type UpdateParams = Parameters<NextAuthResult["unstable_update"]>
++type UpdateParams = Parameters<NextAuthResult["unstable_update"]>;
+ export async function update(
+   data: UpdateParams[0],
+   config: NextAuthConfig
+ ): Promise<Session | null> {
+-  const headers = new Headers(nextHeaders())
+-  headers.set("Content-Type", "application/json")
++  const headers = new Headers(await nextHeaders());
++  headers.set("Content-Type", "application/json");
+ 
+   const url = createActionURL(
+     "session",
+@@ -129,13 +129,13 @@ export async function update(
+     headers,
+     process.env,
+     config
+-  )
+-  const body = JSON.stringify({ data })
+-  const req = new Request(url, { method: "POST", headers, body })
++  );
++  const body = JSON.stringify({ data });
++  const req = new Request(url, { method: "POST", headers, body });
+ 
+-  const res: any = await Auth(req, { ...config, raw, skipCSRFCheck })
++  const res: any = await Auth(req, { ...config, raw, skipCSRFCheck });
+ 
+-  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options)
++  for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options);
+ 
+-  return res.body
++  return res.body;
+ }
+diff --git a/src/lib/index.ts b/src/lib/index.ts
+index efcd2d4fafd77bbee8922b3ee3447764139f0a98..2aa7f48d5625daedbaa301889bf694334d53ad48 100644
+--- a/src/lib/index.ts
++++ b/src/lib/index.ts
+@@ -1,19 +1,19 @@
+-import { Auth, createActionURL, type AuthConfig } from "@auth/core"
++import { Auth, createActionURL, type AuthConfig } from "@auth/core";
+ // @ts-expect-error Next.js does not yet correctly use the `package.json#exports` field
+-import { headers } from "next/headers"
++import { headers } from "next/headers";
+ // @ts-expect-error Next.js does not yet correctly use the `package.json#exports` field
+-import { NextResponse } from "next/server"
+-import { reqWithEnvURL } from "./env.js"
++import { NextResponse } from "next/server";
++import { reqWithEnvURL } from "./env.js";
+ 
+-import type { AuthAction, Awaitable, Session } from "@auth/core/types"
++import type { AuthAction, Awaitable, Session } from "@auth/core/types";
+ import type {
+   GetServerSidePropsContext,
+   NextApiRequest,
+   NextApiResponse,
+-} from "next"
+-import type { AppRouteHandlerFn } from "./types.js"
++} from "next";
++import type { AppRouteHandlerFn } from "./types.js";
+ // @ts-expect-error Next.js does not yet correctly use the `package.json#exports` field
+-import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server"
++import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
+ 
+ /** Configure NextAuth.js. */
+ export interface NextAuthConfig extends Omit<AuthConfig, "raw"> {
+@@ -52,11 +52,11 @@ export interface NextAuthConfig extends Omit<AuthConfig, "raw"> {
+      */
+     authorized?: (params: {
+       /** The request to be authorized. */
+-      request: NextRequest
++      request: NextRequest;
+       /** The authenticated user or token, if any. */
+-      auth: Session | null
+-    }) => Awaitable<boolean | NextResponse | Response | undefined>
+-  }
++      auth: Session | null;
++    }) => Awaitable<boolean | NextResponse | Response | undefined>;
++  };
+ }
+ 
+ async function getSession(headers: Headers, config: NextAuthConfig) {
+@@ -67,10 +67,10 @@ async function getSession(headers: Headers, config: NextAuthConfig) {
+     headers,
+     process.env,
+     config
+-  )
++  );
+   const request = new Request(url, {
+     headers: { cookie: headers.get("cookie") ?? "" },
+-  })
++  });
+ 
+   return Auth(request, {
+     ...config,
+@@ -88,22 +88,22 @@ async function getSession(headers: Headers, config: NextAuthConfig) {
+             expires:
+               args[0].session.expires?.toISOString?.() ??
+               args[0].session.expires,
+-          }
+-        const user = args[0].user ?? args[0].token
+-        return { user, ...session } satisfies Session
++          };
++        const user = args[0].user ?? args[0].token;
++        return { user, ...session } satisfies Session;
+       },
+     },
+-  }) as Promise<Response>
++  }) as Promise<Response>;
+ }
+ 
+ export interface NextAuthRequest extends NextRequest {
+-  auth: Session | null
++  auth: Session | null;
+ }
+ 
+ export type NextAuthMiddleware = (
+   request: NextAuthRequest,
+   event: NextFetchEvent
+-) => ReturnType<NextMiddleware>
++) => ReturnType<NextMiddleware>;
+ 
+ export type WithAuthArgs =
+   | [NextAuthRequest, any]
+@@ -111,10 +111,10 @@ export type WithAuthArgs =
+   | [AppRouteHandlerFn]
+   | [NextApiRequest, NextApiResponse]
+   | [GetServerSidePropsContext]
+-  | []
++  | [];
+ 
+ function isReqWrapper(arg: any): arg is NextAuthMiddleware | AppRouteHandlerFn {
+-  return typeof arg === "function"
++  return typeof arg === "function";
+ }
+ 
+ export function initAuth(
+@@ -127,104 +127,105 @@ export function initAuth(
+     return async (...args: WithAuthArgs) => {
+       if (!args.length) {
+         // React Server Components
+-        const _headers = headers()
+-        const _config = await config(undefined) // Review: Should we pass headers() here instead?
+-        onLazyLoad?.(_config)
++        const _headers = await headers();
++        const _config = await config(undefined); // Review: Should we pass headers() here instead?
++        onLazyLoad?.(_config);
+ 
+-        return getSession(_headers, _config).then((r) => r.json())
++        return getSession(_headers, _config).then((r) => r.json());
+       }
+ 
+       if (args[0] instanceof Request) {
+         // middleware.ts inline
+         // export { auth as default } from "auth"
+-        const req = args[0]
+-        const ev = args[1]
+-        const _config = await config(req)
+-        onLazyLoad?.(_config)
++        const req = args[0];
++        const ev = args[1];
++        const _config = await config(req);
++        onLazyLoad?.(_config);
+ 
+         // args[0] is supposed to be NextRequest but the instanceof check is failing.
+-        return handleAuth([req, ev], _config)
++        return handleAuth([req, ev], _config);
+       }
+ 
+       if (isReqWrapper(args[0])) {
+         // middleware.ts wrapper/route.ts
+         // import { auth } from "auth"
+         // export default auth((req) => { console.log(req.auth) }})
+-        const userMiddlewareOrRoute = args[0]
++        const userMiddlewareOrRoute = args[0];
+         return async (
+           ...args: Parameters<NextAuthMiddleware | AppRouteHandlerFn>
+         ) => {
+-          const _config = await config(args[0])
+-          onLazyLoad?.(_config)
+-          return handleAuth(args, _config, userMiddlewareOrRoute)
+-        }
++          const _config = await config(args[0]);
++          onLazyLoad?.(_config);
++          return handleAuth(args, _config, userMiddlewareOrRoute);
++        };
+       }
+       // API Routes, getServerSideProps
+-      const request = "req" in args[0] ? args[0].req : args[0]
+-      const response: any = "res" in args[0] ? args[0].res : args[1]
+-      const _config = await config(request)
+-      onLazyLoad?.(_config)
++      const request = "req" in args[0] ? args[0].req : args[0];
++      const response: any = "res" in args[0] ? args[0].res : args[1];
++      const _config = await config(request);
++      onLazyLoad?.(_config);
+ 
+       // @ts-expect-error -- request is NextRequest
+       return getSession(new Headers(request.headers), _config).then(
+         async (authResponse) => {
+-          const auth = await authResponse.json()
++          const auth = await authResponse.json();
+ 
+           for (const cookie of authResponse.headers.getSetCookie())
+             if ("headers" in response)
+-              response.headers.append("set-cookie", cookie)
+-            else response.appendHeader("set-cookie", cookie)
++              response.headers.append("set-cookie", cookie);
++            else response.appendHeader("set-cookie", cookie);
+ 
+-          return auth satisfies Session | null
++          return auth satisfies Session | null;
+         }
+-      )
+-    }
++      );
++    };
+   }
+-  return (...args: WithAuthArgs) => {
++  return async (...args: WithAuthArgs) => {
+     if (!args.length) {
+       // React Server Components
+-      return getSession(headers(), config).then((r) => r.json())
++      return getSession(await headers(), config).then((r) => r.json());
+     }
+     if (args[0] instanceof Request) {
+       // middleware.ts inline
+       // export { auth as default } from "auth"
+-      const req = args[0]
+-      const ev = args[1]
+-      return handleAuth([req, ev], config)
++      const req = args[0];
++      const ev = args[1];
++      return handleAuth([req, ev], config);
+     }
+ 
+     if (isReqWrapper(args[0])) {
+       // middleware.ts wrapper/route.ts
+       // import { auth } from "auth"
+       // export default auth((req) => { console.log(req.auth) }})
+-      const userMiddlewareOrRoute = args[0]
++      const userMiddlewareOrRoute = args[0];
+       return async (
+         ...args: Parameters<NextAuthMiddleware | AppRouteHandlerFn>
+       ) => {
+         return handleAuth(args, config, userMiddlewareOrRoute).then((res) => {
+-          return res
+-        })
+-      }
++          return res;
++        });
++      };
+     }
+ 
+     // API Routes, getServerSideProps
+-    const request = "req" in args[0] ? args[0].req : args[0]
+-    const response: any = "res" in args[0] ? args[0].res : args[1]
++    const request = "req" in args[0] ? args[0].req : args[0];
++    const response: any = "res" in args[0] ? args[0].res : args[1];
+ 
+     return getSession(
+       // @ts-expect-error
+       new Headers(request.headers),
+       config
+     ).then(async (authResponse) => {
+-      const auth = await authResponse.json()
++      const auth = await authResponse.json();
+ 
+       for (const cookie of authResponse.headers.getSetCookie())
+-        if ("headers" in response) response.headers.append("set-cookie", cookie)
+-        else response.appendHeader("set-cookie", cookie)
++        if ("headers" in response)
++          response.headers.append("set-cookie", cookie);
++        else response.appendHeader("set-cookie", cookie);
+ 
+-      return auth satisfies Session | null
+-    })
+-  }
++      return auth satisfies Session | null;
++    });
++  };
+ }
+ 
+ async function handleAuth(
+@@ -232,57 +233,57 @@ async function handleAuth(
+   config: NextAuthConfig,
+   userMiddlewareOrRoute?: NextAuthMiddleware | AppRouteHandlerFn
+ ) {
+-  const request = reqWithEnvURL(args[0])
+-  const sessionResponse = await getSession(request.headers, config)
+-  const auth = await sessionResponse.json()
++  const request = reqWithEnvURL(args[0]);
++  const sessionResponse = await getSession(request.headers, config);
++  const auth = await sessionResponse.json();
+ 
+-  let authorized: boolean | NextResponse | Response | undefined = true
++  let authorized: boolean | NextResponse | Response | undefined = true;
+ 
+   if (config.callbacks?.authorized) {
+-    authorized = await config.callbacks.authorized({ request, auth })
++    authorized = await config.callbacks.authorized({ request, auth });
+   }
+ 
+-  let response: any = NextResponse.next?.()
++  let response: any = NextResponse.next?.();
+ 
+   if (authorized instanceof Response) {
+     // User returned a custom response, like redirecting to a page or 401, respect it
+-    response = authorized
++    response = authorized;
+ 
+-    const redirect = authorized.headers.get("Location")
+-    const { pathname } = request.nextUrl
++    const redirect = authorized.headers.get("Location");
++    const { pathname } = request.nextUrl;
+     // If the user is redirecting to the same NextAuth.js action path as the current request,
+     // don't allow the redirect to prevent an infinite loop
+     if (
+       redirect &&
+       isSameAuthAction(pathname, new URL(redirect).pathname, config)
+     ) {
+-      authorized = true
++      authorized = true;
+     }
+   } else if (userMiddlewareOrRoute) {
+     // Execute user's middleware/handler with the augmented request
+-    const augmentedReq = request as NextAuthRequest
+-    augmentedReq.auth = auth
++    const augmentedReq = request as NextAuthRequest;
++    augmentedReq.auth = auth;
+     response =
+       (await userMiddlewareOrRoute(augmentedReq, args[1])) ??
+-      NextResponse.next()
++      NextResponse.next();
+   } else if (!authorized) {
+-    const signInPage = config.pages?.signIn ?? `${config.basePath}/signin`
++    const signInPage = config.pages?.signIn ?? `${config.basePath}/signin`;
+     if (request.nextUrl.pathname !== signInPage) {
+       // Redirect to signin page by default if not authorized
+-      const signInUrl = request.nextUrl.clone()
+-      signInUrl.pathname = signInPage
+-      signInUrl.searchParams.set("callbackUrl", request.nextUrl.href)
+-      response = NextResponse.redirect(signInUrl)
++      const signInUrl = request.nextUrl.clone();
++      signInUrl.pathname = signInPage;
++      signInUrl.searchParams.set("callbackUrl", request.nextUrl.href);
++      response = NextResponse.redirect(signInUrl);
+     }
+   }
+ 
+-  const finalResponse = new Response(response?.body, response)
++  const finalResponse = new Response(response?.body, response);
+ 
+   // Preserve cookies from the session response
+   for (const cookie of sessionResponse.headers.getSetCookie())
+-    finalResponse.headers.append("set-cookie", cookie)
++    finalResponse.headers.append("set-cookie", cookie);
+ 
+-  return finalResponse
++  return finalResponse;
+ }
+ 
+ function isSameAuthAction(
+@@ -290,13 +291,13 @@ function isSameAuthAction(
+   redirectPath: string,
+   config: NextAuthConfig
+ ) {
+-  const action = redirectPath.replace(`${requestPath}/`, "") as AuthAction
+-  const pages = Object.values(config.pages ?? {})
++  const action = redirectPath.replace(`${requestPath}/`, "") as AuthAction;
++  const pages = Object.values(config.pages ?? {});
+ 
+   return (
+     (actions.has(action) || pages.includes(redirectPath)) &&
+     redirectPath === requestPath
+-  )
++  );
+ }
+ 
+ const actions = new Set<AuthAction>([
+@@ -308,4 +309,4 @@ const actions = new Set<AuthAction>([
+   "callback",
+   "verify-request",
+   "error",
+-])
++]);
