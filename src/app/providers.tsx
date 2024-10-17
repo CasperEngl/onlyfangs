@@ -7,8 +7,8 @@ import { SessionProvider } from "next-auth/react";
 
 const ReactQueryDevtools = dynamic(() =>
   import("@tanstack/react-query-devtools").then((mod) => ({
-    default: mod.ReactQueryDevtools
-  }))
+    default: mod.ReactQueryDevtools,
+  })),
 );
 
 export function Providers({ children }: { children: React.ReactNode }) {

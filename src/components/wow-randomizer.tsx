@@ -14,10 +14,10 @@ export function WowRandomizer(props: {
   playerRace?: string | null;
 }) {
   const [selectedRace, setSelectedRace] = useState<string | null>(
-    props.playerRace ?? null
+    props.playerRace ?? null,
   );
   const [selectedClass, setSelectedClass] = useState<string | null>(
-    props.playerClass ?? null
+    props.playerClass ?? null,
   );
   const [showRaceConfetti, setShowRaceConfetti] = useState(false);
   const [showClassConfetti, setShowClassConfetti] = useState(false);
@@ -82,7 +82,7 @@ export function WowRandomizer(props: {
     }, interval);
 
     const selectedRaceCombo = raceClassCombos.find(
-      (combo) => combo.slug === selectedRace
+      (combo) => combo.slug === selectedRace,
     );
     const availableClasses = selectedRaceCombo ? selectedRaceCombo.classes : [];
 

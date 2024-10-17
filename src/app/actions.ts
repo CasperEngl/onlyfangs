@@ -82,7 +82,7 @@ export async function selectRandomClass() {
   }
 
   const selectedRace = raceClassCombos.find(
-    (combo) => combo.slug === race.slug
+    (combo) => combo.slug === race.slug,
   );
 
   const randomClass =

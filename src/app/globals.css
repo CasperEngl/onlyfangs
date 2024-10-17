@@ -9,7 +9,6 @@
       "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
       "Noto Color Emoji";
 
-    /* Integrate WoW colors into the main color scheme */
     --background: 34 40% 12%;
     --foreground: 39 29% 68%;
 
@@ -41,21 +40,10 @@
 
     --radius: 0.5rem;
 
-    /* Keep the original WoW theme variables for specific use cases */
-    --wow-background: #2C1B0F;
-    --wow-card-background: #3D2817;
-    --wow-card-hover: #4E3320;
-    --wow-border: #5C3D24;
-    --wow-title: #FFD700;
-    --wow-subtitle: #E6A64C;
-    --wow-card-button-heading: #A67C52;
-    --wow-text: #D2B48C;
-    --wow-help-text: #A67C52;
-    --wow-randomizing: #8BC34A;
+    --wow-randomizing: #8bc34a;
   }
 
   .dark {
-    /* Update dark theme to match WoW colors */
     --background: 34 40% 12%;
     --foreground: 39 29% 68%;
 
@@ -95,6 +83,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }

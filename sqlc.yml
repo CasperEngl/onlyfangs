@@ -9,8 +9,8 @@ sql:
     queries: "src/app/query.sql"
     schema: "drizzle"
     codegen:
-    - out: src/db
-      plugin: ts
-      options:
-        runtime: node
-        driver: pg
+      - out: src/db
+        plugin: ts
+        options:
+          runtime: node
+          driver: pg
