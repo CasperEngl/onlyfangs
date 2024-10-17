@@ -2,13 +2,13 @@
 SELECT
   *
 FROM
-  players;
+  users;
 
 -- name: GetPlayerById :one
 SELECT
   *
 FROM
-  players
+  users
 WHERE
   id = $1;
 
@@ -24,7 +24,7 @@ WHERE
 SELECT
   *
 FROM
-  players
+  users
 WHERE
   invite_code_id = (
     SELECT
@@ -36,19 +36,19 @@ WHERE
   );
 
 -- name: DeletePlayer :exec
-DELETE FROM players
+DELETE FROM users
 WHERE
   id = $1;
 
 -- name: SetPlayerRace :exec
-UPDATE players
+UPDATE users
 SET
   race_id = $1
 WHERE
   id = $2;
 
 -- name: SetPlayerClass :exec
-UPDATE players
+UPDATE users
 SET
   class_id = $1
 WHERE
@@ -59,20 +59,20 @@ SELECT
   races.name,
   races.slug
 FROM
-  players
-  INNER JOIN races ON races.id = players.race_id
+  users
+  INNER JOIN races ON races.id = users.race_id
 WHERE
-  players.id = $1;
+  users.id = $1;
 
 -- name: GetPlayerClass :one
 SELECT
   classes.name,
   classes.slug
 FROM
-  players
-  INNER JOIN classes ON classes.id = players.class_id
+  users
+  INNER JOIN classes ON classes.id = users.class_id
 WHERE
-  players.id = $1;
+  users.id = $1;
 
 -- name: GetRaces :many
 SELECT
@@ -94,17 +94,18 @@ FROM
 WHERE
   code = $1;
 
--- name: CreateInviteCode :execresult
+-- name: CreateInviteCode :one
 INSERT INTO
-  invite_codes (code)
+  invite_codes (code, created_by)
 VALUES
   (
-    $1
+    $1,
+    $2
   ) RETURNING *;
 
--- name: CreatePlayer :execresult
+-- name: CreatePlayer :one
 INSERT INTO
-  players (username, invite_code_id, race_id, class_id)
+  users (name, invite_code_id, race_id, class_id)
 VALUES
   (
     $1,
@@ -118,4 +119,4 @@ VALUES
     ),
     $3,
     $4
-  );
+  ) RETURNING *;

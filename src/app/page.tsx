@@ -1,8 +1,13 @@
-import { getPlayerClass, getPlayerRace } from "~/app/db";
-import { pool } from "~/app/db/client";
+import { getPlayerClass, getPlayerRace } from "~/db";
+import { pool } from "~/db/client";
 import { WowRandomizer } from "~/components/wow-randomizer";
+import { auth } from "~/auth";
 
 export default async function Home() {
+  const session = await auth();
+
+  console.log("session", session);
+
   const playerClass = await getPlayerClass(pool, {
     id: 1,
   });

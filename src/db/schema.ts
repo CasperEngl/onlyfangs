@@ -5,6 +5,8 @@ import {
   text,
   primaryKey,
   integer,
+  serial,
+  varchar,
 } from "drizzle-orm/pg-core";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -14,22 +16,27 @@ const pool = postgres(process.env.DATABASE_URL!, { max: 1 });
 
 export const db = drizzle(pool);
 
-export const users = pgTable("user", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+export const Users = pgTable("users", {
+  id: serial("id").primaryKey(),
   name: text("name"),
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
+  raceId: integer("race_id").references(() => Races.id, {
+    onDelete: "set null",
+  }),
+  classId: integer("class_id").references(() => Classes.id, {
+    onDelete: "set null",
+  }),
+  invite_code_id: integer("invite_code_id").references(() => InviteCodes.id),
 });
 
-export const accounts = pgTable(
-  "account",
+export const Accounts = pgTable(
+  "accounts",
   {
-    userId: text("userId")
+    userId: integer("userId")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => Users.id, { onDelete: "cascade" }),
     type: text("type").$type<AdapterAccount>().notNull(),
     provider: text("provider").notNull(),
     providerAccountId: text("providerAccountId").notNull(),
@@ -48,16 +55,16 @@ export const accounts = pgTable(
   })
 );
 
-export const sessions = pgTable("session", {
+export const Sessions = pgTable("sessions", {
   sessionToken: text("sessionToken").primaryKey(),
-  userId: text("userId")
+  userId: integer("userId")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => Users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
-export const verificationTokens = pgTable(
-  "verificationToken",
+export const VerificationTokens = pgTable(
+  "verificationTokens",
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
@@ -70,13 +77,13 @@ export const verificationTokens = pgTable(
   })
 );
 
-export const authenticators = pgTable(
-  "authenticator",
+export const Authenticators = pgTable(
+  "authenticators",
   {
     credentialID: text("credentialID").notNull().unique(),
-    userId: text("userId")
+    userId: integer("userId")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => Users.id, { onDelete: "cascade" }),
     providerAccountId: text("providerAccountId").notNull(),
     credentialPublicKey: text("credentialPublicKey").notNull(),
     counter: integer("counter").notNull(),
@@ -90,3 +97,25 @@ export const authenticators = pgTable(
     }),
   })
 );
+
+export const Races = pgTable("races", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+});
+
+export const Classes = pgTable("classes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+});
+
+export const InviteCodes = pgTable("invite_codes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 255 }).notNull().unique(),
+  createdBy: integer("created_by")
+    .notNull()
+    .references((): any => Users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  usedAt: timestamp("used_at"),
+});

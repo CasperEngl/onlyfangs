@@ -6,17 +6,19 @@ interface Client {
 
 export const getPlayersQuery = `-- name: GetPlayers :many
 SELECT
-  id, username, invite_code_id, race_id, class_id, created_at
+  id, name, email, "emailVerified", image, race_id, class_id, invite_code_id
 FROM
-  players`;
+  users`;
 
 export interface GetPlayersRow {
     id: number;
-    username: string;
-    inviteCodeId: number | null;
+    name: string | null;
+    email: string | null;
+    emailverified: Date | null;
+    image: string | null;
     raceId: number | null;
     classId: number | null;
-    createdAt: Date | null;
+    inviteCodeId: number | null;
 }
 
 export async function getPlayers(client: Client): Promise<GetPlayersRow[]> {
@@ -28,20 +30,22 @@ export async function getPlayers(client: Client): Promise<GetPlayersRow[]> {
     return result.rows.map(row => {
         return {
             id: row[0],
-            username: row[1],
-            inviteCodeId: row[2],
-            raceId: row[3],
-            classId: row[4],
-            createdAt: row[5]
+            name: row[1],
+            email: row[2],
+            emailverified: row[3],
+            image: row[4],
+            raceId: row[5],
+            classId: row[6],
+            inviteCodeId: row[7]
         };
     });
 }
 
 export const getPlayerByIdQuery = `-- name: GetPlayerById :one
 SELECT
-  id, username, invite_code_id, race_id, class_id, created_at
+  id, name, email, "emailVerified", image, race_id, class_id, invite_code_id
 FROM
-  players
+  users
 WHERE
   id = $1`;
 
@@ -51,11 +55,13 @@ export interface GetPlayerByIdArgs {
 
 export interface GetPlayerByIdRow {
     id: number;
-    username: string;
-    inviteCodeId: number | null;
+    name: string | null;
+    email: string | null;
+    emailverified: Date | null;
+    image: string | null;
     raceId: number | null;
     classId: number | null;
-    createdAt: Date | null;
+    inviteCodeId: number | null;
 }
 
 export async function getPlayerById(client: Client, args: GetPlayerByIdArgs): Promise<GetPlayerByIdRow | null> {
@@ -70,11 +76,13 @@ export async function getPlayerById(client: Client, args: GetPlayerByIdArgs): Pr
     const row = result.rows[0];
     return {
         id: row[0],
-        username: row[1],
-        inviteCodeId: row[2],
-        raceId: row[3],
-        classId: row[4],
-        createdAt: row[5]
+        name: row[1],
+        email: row[2],
+        emailverified: row[3],
+        image: row[4],
+        raceId: row[5],
+        classId: row[6],
+        inviteCodeId: row[7]
     };
 }
 
@@ -100,9 +108,9 @@ export async function consumeInviteCode(client: Client, args: ConsumeInviteCodeA
 
 export const getPlayerByInviteCodeQuery = `-- name: GetPlayerByInviteCode :one
 SELECT
-  id, username, invite_code_id, race_id, class_id, created_at
+  id, name, email, "emailVerified", image, race_id, class_id, invite_code_id
 FROM
-  players
+  users
 WHERE
   invite_code_id = (
     SELECT
@@ -119,11 +127,13 @@ export interface GetPlayerByInviteCodeArgs {
 
 export interface GetPlayerByInviteCodeRow {
     id: number;
-    username: string;
-    inviteCodeId: number | null;
+    name: string | null;
+    email: string | null;
+    emailverified: Date | null;
+    image: string | null;
     raceId: number | null;
     classId: number | null;
-    createdAt: Date | null;
+    inviteCodeId: number | null;
 }
 
 export async function getPlayerByInviteCode(client: Client, args: GetPlayerByInviteCodeArgs): Promise<GetPlayerByInviteCodeRow | null> {
@@ -138,41 +148,18 @@ export async function getPlayerByInviteCode(client: Client, args: GetPlayerByInv
     const row = result.rows[0];
     return {
         id: row[0],
-        username: row[1],
-        inviteCodeId: row[2],
-        raceId: row[3],
-        classId: row[4],
-        createdAt: row[5]
+        name: row[1],
+        email: row[2],
+        emailverified: row[3],
+        image: row[4],
+        raceId: row[5],
+        classId: row[6],
+        inviteCodeId: row[7]
     };
 }
 
-export const createPlayerQuery = `-- name: CreatePlayer :execresult
-INSERT INTO
-  players (username, invite_code_id, race_id, class_id)
-VALUES
-  (
-    $1,
-    (
-      SELECT
-        id
-      FROM
-        invite_codes
-      WHERE
-        code = $2
-    ),
-    $3,
-    $4
-  )`;
-
-export interface CreatePlayerArgs {
-    username: string;
-    code: string;
-    raceId: number | null;
-    classId: number | null;
-}
-
 export const deletePlayerQuery = `-- name: DeletePlayer :exec
-DELETE FROM players
+DELETE FROM users
 WHERE
   id = $1`;
 
@@ -189,7 +176,7 @@ export async function deletePlayer(client: Client, args: DeletePlayerArgs): Prom
 }
 
 export const setPlayerRaceQuery = `-- name: SetPlayerRace :exec
-UPDATE players
+UPDATE users
 SET
   race_id = $1
 WHERE
@@ -209,7 +196,7 @@ export async function setPlayerRace(client: Client, args: SetPlayerRaceArgs): Pr
 }
 
 export const setPlayerClassQuery = `-- name: SetPlayerClass :exec
-UPDATE players
+UPDATE users
 SET
   class_id = $1
 WHERE
@@ -233,10 +220,10 @@ SELECT
   races.name,
   races.slug
 FROM
-  players
-  INNER JOIN races ON races.id = players.race_id
+  users
+  INNER JOIN races ON races.id = users.race_id
 WHERE
-  players.id = $1`;
+  users.id = $1`;
 
 export interface GetPlayerRaceArgs {
     id: number;
@@ -268,10 +255,10 @@ SELECT
   classes.name,
   classes.slug
 FROM
-  players
-  INNER JOIN classes ON classes.id = players.class_id
+  users
+  INNER JOIN classes ON classes.id = users.class_id
 WHERE
-  players.id = $1`;
+  users.id = $1`;
 
 export interface GetPlayerClassArgs {
     id: number;
@@ -388,6 +375,105 @@ export async function getInviteCode(client: Client, args: GetInviteCodeArgs): Pr
         createdBy: row[2],
         createdAt: row[3],
         usedAt: row[4]
+    };
+}
+
+export const createInviteCodeQuery = `-- name: CreateInviteCode :one
+INSERT INTO
+  invite_codes (code, created_by)
+VALUES
+  (
+    $1,
+    $2
+  ) RETURNING id, code, created_by, created_at, used_at`;
+
+export interface CreateInviteCodeArgs {
+    code: string;
+    createdBy: number;
+}
+
+export interface CreateInviteCodeRow {
+    id: number;
+    code: string;
+    createdBy: number;
+    createdAt: Date | null;
+    usedAt: Date | null;
+}
+
+export async function createInviteCode(client: Client, args: CreateInviteCodeArgs): Promise<CreateInviteCodeRow | null> {
+    const result = await client.query({
+        text: createInviteCodeQuery,
+        values: [args.code, args.createdBy],
+        rowMode: "array"
+    });
+    if (result.rows.length !== 1) {
+        return null;
+    }
+    const row = result.rows[0];
+    return {
+        id: row[0],
+        code: row[1],
+        createdBy: row[2],
+        createdAt: row[3],
+        usedAt: row[4]
+    };
+}
+
+export const createPlayerQuery = `-- name: CreatePlayer :one
+INSERT INTO
+  users (name, invite_code_id, race_id, class_id)
+VALUES
+  (
+    $1,
+    (
+      SELECT
+        id
+      FROM
+        invite_codes
+      WHERE
+        code = $2
+    ),
+    $3,
+    $4
+  ) RETURNING id, name, email, "emailVerified", image, race_id, class_id, invite_code_id`;
+
+export interface CreatePlayerArgs {
+    name: string | null;
+    code: string;
+    raceId: number | null;
+    classId: number | null;
+}
+
+export interface CreatePlayerRow {
+    id: number;
+    name: string | null;
+    email: string | null;
+    emailverified: Date | null;
+    image: string | null;
+    raceId: number | null;
+    classId: number | null;
+    inviteCodeId: number | null;
+}
+
+export async function createPlayer(client: Client, args: CreatePlayerArgs): Promise<CreatePlayerRow | null> {
+    const result = await client.query({
+        text: createPlayerQuery,
+        values: [args.name, args.code, args.raceId, args.classId],
+        rowMode: "array"
+    });
+    if (result.rows.length !== 1) {
+        return null;
+    }
+    const row = result.rows[0];
+    return {
+        id: row[0],
+        name: row[1],
+        email: row[2],
+        emailverified: row[3],
+        image: row[4],
+        raceId: row[5],
+        classId: row[6],
+        inviteCodeId: row[7]
     };
 }
 

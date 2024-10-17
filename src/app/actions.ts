@@ -9,8 +9,8 @@ import {
   getRaces,
   setPlayerClass,
   setPlayerRace,
-} from "~/app/db";
-import { pool } from "~/app/db/client";
+} from "~/db";
+import { pool } from "~/db/client";
 import { raceClassCombos } from "~/app/race-class-combos";
 
 export async function selectRandomRace() {
