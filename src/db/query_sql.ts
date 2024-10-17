@@ -4,46 +4,9 @@ interface Client {
     query: (config: QueryArrayConfig) => Promise<QueryArrayResult>;
 }
 
-export const getPlayersQuery = `-- name: GetPlayers :many
-SELECT
-  id, name, email, "emailVerified", image, race_id, class_id, invite_code_id
-FROM
-  users`;
-
-export interface GetPlayersRow {
-    id: number;
-    name: string | null;
-    email: string | null;
-    emailverified: Date | null;
-    image: string | null;
-    raceId: number | null;
-    classId: number | null;
-    inviteCodeId: number | null;
-}
-
-export async function getPlayers(client: Client): Promise<GetPlayersRow[]> {
-    const result = await client.query({
-        text: getPlayersQuery,
-        values: [],
-        rowMode: "array"
-    });
-    return result.rows.map(row => {
-        return {
-            id: row[0],
-            name: row[1],
-            email: row[2],
-            emailverified: row[3],
-            image: row[4],
-            raceId: row[5],
-            classId: row[6],
-            inviteCodeId: row[7]
-        };
-    });
-}
-
 export const getPlayerByIdQuery = `-- name: GetPlayerById :one
 SELECT
-  id, name, email, "emailVerified", image, race_id, class_id, invite_code_id
+  id, name, race_id, class_id, invite_code_id
 FROM
   users
 WHERE
@@ -55,10 +18,7 @@ export interface GetPlayerByIdArgs {
 
 export interface GetPlayerByIdRow {
     id: number;
-    name: string | null;
-    email: string | null;
-    emailverified: Date | null;
-    image: string | null;
+    name: string;
     raceId: number | null;
     classId: number | null;
     inviteCodeId: number | null;
@@ -77,38 +37,15 @@ export async function getPlayerById(client: Client, args: GetPlayerByIdArgs): Pr
     return {
         id: row[0],
         name: row[1],
-        email: row[2],
-        emailverified: row[3],
-        image: row[4],
-        raceId: row[5],
-        classId: row[6],
-        inviteCodeId: row[7]
+        raceId: row[2],
+        classId: row[3],
+        inviteCodeId: row[4]
     };
-}
-
-export const consumeInviteCodeQuery = `-- name: ConsumeInviteCode :exec
-UPDATE invite_codes
-SET
-  used_at = CURRENT_TIMESTAMP
-WHERE
-  code = $1
-  AND used_at IS NULL`;
-
-export interface ConsumeInviteCodeArgs {
-    code: string;
-}
-
-export async function consumeInviteCode(client: Client, args: ConsumeInviteCodeArgs): Promise<void> {
-    await client.query({
-        text: consumeInviteCodeQuery,
-        values: [args.code],
-        rowMode: "array"
-    });
 }
 
 export const getPlayerByInviteCodeQuery = `-- name: GetPlayerByInviteCode :one
 SELECT
-  id, name, email, "emailVerified", image, race_id, class_id, invite_code_id
+  id, name, race_id, class_id, invite_code_id
 FROM
   users
 WHERE
@@ -127,10 +64,7 @@ export interface GetPlayerByInviteCodeArgs {
 
 export interface GetPlayerByInviteCodeRow {
     id: number;
-    name: string | null;
-    email: string | null;
-    emailverified: Date | null;
-    image: string | null;
+    name: string;
     raceId: number | null;
     classId: number | null;
     inviteCodeId: number | null;
@@ -149,30 +83,10 @@ export async function getPlayerByInviteCode(client: Client, args: GetPlayerByInv
     return {
         id: row[0],
         name: row[1],
-        email: row[2],
-        emailverified: row[3],
-        image: row[4],
-        raceId: row[5],
-        classId: row[6],
-        inviteCodeId: row[7]
+        raceId: row[2],
+        classId: row[3],
+        inviteCodeId: row[4]
     };
-}
-
-export const deletePlayerQuery = `-- name: DeletePlayer :exec
-DELETE FROM users
-WHERE
-  id = $1`;
-
-export interface DeletePlayerArgs {
-    id: number;
-}
-
-export async function deletePlayer(client: Client, args: DeletePlayerArgs): Promise<void> {
-    await client.query({
-        text: deletePlayerQuery,
-        values: [args.id],
-        rowMode: "array"
-    });
 }
 
 export const setPlayerRaceQuery = `-- name: SetPlayerRace :exec
@@ -339,29 +253,28 @@ export async function getClasses(client: Client): Promise<GetClassesRow[]> {
     });
 }
 
-export const getInviteCodeQuery = `-- name: GetInviteCode :one
-SELECT
-  id, code, created_by, created_at, used_at
-FROM
-  invite_codes
-WHERE
-  code = $1`;
+export const createInviteCodeQuery = `-- name: CreateInviteCode :one
+INSERT INTO
+  invite_codes (code)
+VALUES
+  (
+    $1
+  ) RETURNING id, code, created_at, used_at`;
 
-export interface GetInviteCodeArgs {
+export interface CreateInviteCodeArgs {
     code: string;
 }
 
-export interface GetInviteCodeRow {
+export interface CreateInviteCodeRow {
     id: number;
     code: string;
-    createdBy: number;
     createdAt: Date | null;
     usedAt: Date | null;
 }
 
-export async function getInviteCode(client: Client, args: GetInviteCodeArgs): Promise<GetInviteCodeRow | null> {
+export async function createInviteCode(client: Client, args: CreateInviteCodeArgs): Promise<CreateInviteCodeRow | null> {
     const result = await client.query({
-        text: getInviteCodeQuery,
+        text: createInviteCodeQuery,
         values: [args.code],
         rowMode: "array"
     });
@@ -372,50 +285,8 @@ export async function getInviteCode(client: Client, args: GetInviteCodeArgs): Pr
     return {
         id: row[0],
         code: row[1],
-        createdBy: row[2],
-        createdAt: row[3],
-        usedAt: row[4]
-    };
-}
-
-export const createInviteCodeQuery = `-- name: CreateInviteCode :one
-INSERT INTO
-  invite_codes (code, created_by)
-VALUES
-  (
-    $1,
-    $2
-  ) RETURNING id, code, created_by, created_at, used_at`;
-
-export interface CreateInviteCodeArgs {
-    code: string;
-    createdBy: number;
-}
-
-export interface CreateInviteCodeRow {
-    id: number;
-    code: string;
-    createdBy: number;
-    createdAt: Date | null;
-    usedAt: Date | null;
-}
-
-export async function createInviteCode(client: Client, args: CreateInviteCodeArgs): Promise<CreateInviteCodeRow | null> {
-    const result = await client.query({
-        text: createInviteCodeQuery,
-        values: [args.code, args.createdBy],
-        rowMode: "array"
-    });
-    if (result.rows.length !== 1) {
-        return null;
-    }
-    const row = result.rows[0];
-    return {
-        id: row[0],
-        code: row[1],
-        createdBy: row[2],
-        createdAt: row[3],
-        usedAt: row[4]
+        createdAt: row[2],
+        usedAt: row[3]
     };
 }
 
@@ -435,10 +306,10 @@ VALUES
     ),
     $3,
     $4
-  ) RETURNING id, name, email, "emailVerified", image, race_id, class_id, invite_code_id`;
+  ) RETURNING id, name, race_id, class_id, invite_code_id`;
 
 export interface CreatePlayerArgs {
-    name: string | null;
+    name: string;
     code: string;
     raceId: number | null;
     classId: number | null;
@@ -446,10 +317,7 @@ export interface CreatePlayerArgs {
 
 export interface CreatePlayerRow {
     id: number;
-    name: string | null;
-    email: string | null;
-    emailverified: Date | null;
-    image: string | null;
+    name: string;
     raceId: number | null;
     classId: number | null;
     inviteCodeId: number | null;
@@ -468,12 +336,9 @@ export async function createPlayer(client: Client, args: CreatePlayerArgs): Prom
     return {
         id: row[0],
         name: row[1],
-        email: row[2],
-        emailverified: row[3],
-        image: row[4],
-        raceId: row[5],
-        classId: row[6],
-        inviteCodeId: row[7]
+        raceId: row[2],
+        classId: row[3],
+        inviteCodeId: row[4]
     };
 }
 

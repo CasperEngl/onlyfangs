@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { SessionProvider } from "next-auth/react";
 
 const ReactQueryDevtools = dynamic(() =>
   import("@tanstack/react-query-devtools").then((mod) => ({
@@ -15,7 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <SessionProvider>{children}</SessionProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

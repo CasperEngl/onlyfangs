@@ -1,9 +1,3 @@
--- name: GetPlayers :many
-SELECT
-  *
-FROM
-  users;
-
 -- name: GetPlayerById :one
 SELECT
   *
@@ -11,14 +5,6 @@ FROM
   users
 WHERE
   id = $1;
-
--- name: ConsumeInviteCode :exec
-UPDATE invite_codes
-SET
-  used_at = CURRENT_TIMESTAMP
-WHERE
-  code = $1
-  AND used_at IS NULL;
 
 -- name: GetPlayerByInviteCode :one
 SELECT
@@ -34,11 +20,6 @@ WHERE
     WHERE
       code = $1
   );
-
--- name: DeletePlayer :exec
-DELETE FROM users
-WHERE
-  id = $1;
 
 -- name: SetPlayerRace :exec
 UPDATE users
@@ -86,21 +67,12 @@ SELECT
 FROM
   classes;
 
--- name: GetInviteCode :one
-SELECT
-  *
-FROM
-  invite_codes
-WHERE
-  code = $1;
-
 -- name: CreateInviteCode :one
 INSERT INTO
-  invite_codes (code, created_by)
+  invite_codes (code)
 VALUES
   (
-    $1,
-    $2
+    $1
   ) RETURNING *;
 
 -- name: CreatePlayer :one

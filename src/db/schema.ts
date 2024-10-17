@@ -16,7 +16,6 @@ export const db = drizzle(pool);
 export const Users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  email: text("email").unique().notNull(),
   raceId: integer("race_id").references(() => Races.id, {
     onDelete: "set null",
   }),

@@ -5,29 +5,25 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 import { getPlayerByInviteCode } from "~/db";
 import { pool } from "~/db/client";
-import {
-  Accounts,
-  Authenticators,
-  db,
-  Sessions,
-  Users,
-  VerificationTokens,
-} from "~/db/schema";
+import { db } from "~/db/schema";
 
 invariant(process.env.AUTH_DISCORD_ID, "Missing AUTH_DISCORD_ID");
 invariant(process.env.AUTH_DISCORD_SECRET, "Missing AUTH_DISCORD_SECRET");
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   debug: process.env.NODE_ENV === "development",
-  adapter: DrizzleAdapter(db, {
-    usersTable: Users as never,
-    accountsTable: Accounts as never,
-    authenticatorsTable: Authenticators as never,
-    sessionsTable: Sessions as never,
-    verificationTokensTable: VerificationTokens,
-  }),
+  adapter: DrizzleAdapter(db),
   session: {
     strategy: "jwt",
+  },
+  callbacks: {
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+      }
+
+      return session;
+    },
   },
   providers: [
     CredentialsProvider({
@@ -48,7 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         return {
           ...user,
-          id: user?.id.toString(),
+          id: user.id.toString(),
         };
       },
     }),

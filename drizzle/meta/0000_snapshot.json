@@ -1,5 +1,5 @@
 {
-  "id": "8e6e0eea-40d9-4e39-8649-f34479c361c7",
+  "id": "1eb8145c-41ca-49a1-817b-fba56f3744ff",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -152,12 +152,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "race_id": {
           "name": "race_id",
           "type": "integer",
@@ -220,15 +214,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "users_email_unique": {
-          "name": "users_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraints": {}
     }
   },

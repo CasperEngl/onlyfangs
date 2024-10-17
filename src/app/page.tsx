@@ -2,17 +2,22 @@ import { getPlayerClass, getPlayerRace } from "~/db";
 import { pool } from "~/db/client";
 import { WowRandomizer } from "~/components/wow-randomizer";
 import { auth } from "~/auth";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const session = await auth();
 
-  console.log("session", session);
+  console.log("app.tsx: session", session);
+
+  if (!session?.user?.id) {
+    return redirect("/api/auth/signin");
+  }
 
   const playerClass = await getPlayerClass(pool, {
-    id: 1,
+    id: Number(session.user.id),
   });
   const playerRace = await getPlayerRace(pool, {
-    id: 1,
+    id: Number(session.user.id),
   });
 
   return (

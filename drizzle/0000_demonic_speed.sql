@@ -25,11 +25,9 @@ CREATE TABLE IF NOT EXISTS "races" (
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
-	"email" text NOT NULL,
 	"race_id" integer,
 	"class_id" integer,
-	"invite_code_id" integer,
-	CONSTRAINT "users_email_unique" UNIQUE("email")
+	"invite_code_id" integer
 );
 --> statement-breakpoint
 DO $$ BEGIN
