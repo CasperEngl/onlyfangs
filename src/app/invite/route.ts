@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { getInviteCode, getPlayerByInviteCode } from "~/src/app/db";
-import { pool } from "~/src/app/db/client";
+import { getInviteCode, getPlayerByInviteCode } from "~/app/db";
+import { pool } from "~/app/db/client";
 
 export async function GET(request: NextRequest) {
   const param = request.nextUrl.searchParams.get("invite_code");

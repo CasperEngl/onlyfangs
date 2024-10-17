@@ -4,10 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import ReactConfetti from "react-confetti";
 import { toast } from "sonner";
-import { selectRandomClass, selectRandomRace } from "~/src/app/actions";
-import { raceClassCombos } from "~/src/app/race-class-combos";
-import { Card } from "~/src/components/ui/card";
-import { cn } from "~/src/lib/utils";
+import { selectRandomClass, selectRandomRace } from "~/app/actions";
+import { raceClassCombos } from "~/app/race-class-combos";
+import { Card } from "~/components/ui/card";
+import { cn } from "~/lib/utils";
 
 export function WowRandomizer(props: {
   playerClass?: string | null;

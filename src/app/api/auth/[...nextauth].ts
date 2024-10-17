@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { consumeInviteCode } from "~/src/app/db";
-import { pool } from "~/src/app/db/client";
+import { consumeInviteCode } from "~/app/db";
+import { pool } from "~/app/db/client";
 
 export default NextAuth({
   providers: [
