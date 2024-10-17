@@ -35,24 +35,6 @@ WHERE
       code = $1
   );
 
--- name: CreatePlayer :execresult
-INSERT INTO
-  players (username, invite_code_id, race_id, class_id)
-VALUES
-  (
-    $1,
-    (
-      SELECT
-        id
-      FROM
-        invite_codes
-      WHERE
-        code = $2
-    ),
-    $3,
-    $4
-  );
-
 -- name: DeletePlayer :exec
 DELETE FROM players
 WHERE
@@ -111,3 +93,29 @@ FROM
   invite_codes
 WHERE
   code = $1;
+
+-- name: CreateInviteCode :execresult
+INSERT INTO
+  invite_codes (code)
+VALUES
+  (
+    $1
+  ) RETURNING *;
+
+-- name: CreatePlayer :execresult
+INSERT INTO
+  players (username, invite_code_id, race_id, class_id)
+VALUES
+  (
+    $1,
+    (
+      SELECT
+        id
+      FROM
+        invite_codes
+      WHERE
+        code = $2
+    ),
+    $3,
+    $4
+  );
