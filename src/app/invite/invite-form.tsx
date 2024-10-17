@@ -21,7 +21,7 @@ export function InviteForm(props: { inviteCode: string }) {
       }}
     >
       <div className="mb-4">
-        <Label htmlFor="name" className="text-[var(--wow-text)]">
+        <Label htmlFor="name" className="text-foreground">
           Participant Name
         </Label>
         <Input
@@ -29,12 +29,12 @@ export function InviteForm(props: { inviteCode: string }) {
           name="name"
           id="name"
           required
-          className="bg-[var(--wow-card-background)] text-[var(--wow-text)] border-[var(--wow-border)]"
+          className="border-border bg-card text-foreground"
         />
       </div>
 
       <div className="mb-6">
-        <Label htmlFor="invite_code" className="text-[var(--wow-text)]">
+        <Label htmlFor="invite_code" className="text-foreground">
           Invite Code (Auto-generated)
         </Label>
         <Input
@@ -43,13 +43,13 @@ export function InviteForm(props: { inviteCode: string }) {
           id="invite_code"
           readOnly
           value={props.inviteCode}
-          className="tabular-nums font-mono tracking-widest bg-[var(--wow-card-background)] text-[var(--wow-text)] border-[var(--wow-border)]"
+          className="border-border bg-card font-mono tabular-nums tracking-widest text-foreground"
         />
       </div>
 
       <Button
         type="submit"
-        className="w-full bg-[var(--wow-subtitle)] text-[var(--wow-background)] hover:bg-[var(--wow-title)]"
+        className="w-full bg-secondary text-secondary-foreground hover:bg-primary"
       >
         Generate Invite
       </Button>

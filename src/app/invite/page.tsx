@@ -23,12 +23,12 @@ export default async function Invite() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <Card className="w-full max-w-md border-[var(--wow-border)] bg-[var(--wow-card-background)]">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold text-[var(--wow-title)]">
+          <CardTitle className="text-center text-2xl font-bold text-primary">
             Invite Participant to OnlyFangs
           </CardTitle>
-          <CardDescription className="text-center text-[var(--wow-text)]">
+          <CardDescription className="text-center text-foreground">
             Use this form to generate an invite code and invite a new
             participant to OnlyFangs.
           </CardDescription>

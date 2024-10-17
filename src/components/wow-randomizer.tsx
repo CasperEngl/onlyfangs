@@ -98,15 +98,15 @@ export function WowRandomizer(props: {
   };
 
   return (
-    <div className="min-h-screen bg-background bg-cover bg-center flex items-center justify-center">
-      <div className="bg-card px-24 py-16 rounded-lg shadow-lg max-w-3xl w-full">
-        <h1 className="text-2xl font-bold text-primary text-center mb-2">
+    <div className="flex min-h-screen items-center justify-center bg-background bg-cover bg-center">
+      <div className="w-full max-w-3xl rounded-lg bg-card px-24 py-16 shadow-lg">
+        <h1 className="mb-2 text-center text-2xl font-bold text-primary">
           World of Warcraft
         </h1>
-        <h2 className="text-6xl font-semibold text-secondary text-center mb-8">
+        <h2 className="mb-8 text-center text-6xl font-semibold text-secondary">
           OnlyFangs
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <div ref={raceCardRef} className="relative">
             {showRaceConfetti && raceCardRef.current && (
               <div className="absolute inset-0 z-20">
@@ -126,13 +126,13 @@ export function WowRandomizer(props: {
             )}
             <Card
               className={cn(
-                "relative overflow-hidden group h-64 border-border bg-card",
-                !selectedRace && "cursor-pointer hover:bg-accent"
+                "group relative h-64 overflow-hidden border-border bg-card",
+                !selectedRace && "cursor-pointer hover:bg-accent",
               )}
               onClick={randomizeRace}
             >
               <div
-                className={cn("absolute inset-0 bg-cover bg-center z-0", {
+                className={cn("absolute inset-0 z-0 bg-cover bg-center", {
                   "transition-transform duration-300 group-hover:scale-110":
                     !selectedRace,
                 })}
@@ -143,11 +143,11 @@ export function WowRandomizer(props: {
                       : "none",
                 }}
               />
-              <div className="relative z-10 p-6 bg-card bg-opacity-75 h-full flex flex-col">
-                <h2 className="text-2xl font-semibold text-secondary mb-4 text-center">
+              <div className="relative z-10 flex h-full flex-col bg-[#3D2817] bg-opacity-75 p-6">
+                <h2 className="mb-4 text-center text-2xl font-semibold text-secondary">
                   Race
                 </h2>
-                <div className="flex-grow flex items-center justify-center">
+                <div className="flex flex-grow items-center justify-center">
                   <span
                     className={`text-5xl font-bold ${
                       raceMutation.isPending
@@ -157,7 +157,7 @@ export function WowRandomizer(props: {
                   >
                     {selectedRace
                       ? raceClassCombos.find(
-                          (combo) => combo.slug === selectedRace
+                          (combo) => combo.slug === selectedRace,
                         )?.name
                       : "?"}
                   </span>
@@ -167,7 +167,7 @@ export function WowRandomizer(props: {
                     "mt-4 text-center text-foreground",
                     props.playerRace || raceMutation.isSuccess
                       ? "invisible"
-                      : ""
+                      : "",
                   )}
                 >
                   {raceMutation.isPending
@@ -196,13 +196,13 @@ export function WowRandomizer(props: {
             )}
             <Card
               className={cn(
-                "relative overflow-hidden group h-64 border-border bg-card",
-                !selectedClass && "cursor-pointer hover:bg-accent"
+                "group relative h-64 overflow-hidden border-border bg-card",
+                !selectedClass && "cursor-pointer hover:bg-accent",
               )}
               onClick={randomizeClass}
             >
               <div
-                className={cn("absolute inset-0 bg-cover bg-center z-0", {
+                className={cn("absolute inset-0 z-0 bg-cover bg-center", {
                   "transition-transform duration-300 group-hover:scale-110":
                     !selectedClass,
                 })}
@@ -213,11 +213,11 @@ export function WowRandomizer(props: {
                       : "none",
                 }}
               />
-              <div className="relative z-10 p-6 bg-card bg-opacity-75 h-full flex flex-col">
-                <h2 className="text-2xl font-semibold text-secondary mb-4 text-center">
+              <div className="relative z-10 flex h-full flex-col bg-[#3D2817] bg-opacity-75 p-6">
+                <h2 className="mb-4 text-center text-2xl font-semibold text-secondary">
                   Class
                 </h2>
-                <div className="flex-grow flex items-center justify-center">
+                <div className="flex flex-grow items-center justify-center">
                   <span
                     className={`text-5xl font-bold ${
                       classMutation.isPending
@@ -226,18 +226,18 @@ export function WowRandomizer(props: {
                     }`}
                   >
                     {selectedClass
-                      ? raceClassCombos
+                      ? (raceClassCombos
                           .flatMap((race) => race.classes)
-                          .find((c) => c.slug === selectedClass)?.name ?? "?"
+                          .find((c) => c.slug === selectedClass)?.name ?? "?")
                       : "?"}
                   </span>
                 </div>
                 <div
                   className={cn(
                     "mt-4 text-center text-foreground",
-                    props.playerRace || raceMutation.isSuccess
+                    props.playerRace || classMutation.isSuccess
                       ? "invisible"
-                      : ""
+                      : "",
                   )}
                 >
                   {classMutation.isPending
@@ -249,7 +249,7 @@ export function WowRandomizer(props: {
           </div>
         </div>
 
-        <div className="mt-8 text-center text-muted-foreground text-sm">
+        <div className="mt-8 text-center text-sm text-muted-foreground">
           Need to reset your race/class selection? Contact an admin for
           assistance.
         </div>
