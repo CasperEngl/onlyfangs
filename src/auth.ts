@@ -10,6 +10,12 @@ import { db } from "~/db/schema";
 invariant(process.env.AUTH_DISCORD_ID, "Missing AUTH_DISCORD_ID");
 invariant(process.env.AUTH_DISCORD_SECRET, "Missing AUTH_DISCORD_SECRET");
 
+declare module "next-auth" {
+  interface Session {
+    admin: boolean;
+  }
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   debug: process.env.NODE_ENV === "development",
   adapter: DrizzleAdapter(db),
@@ -20,6 +26,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+        session.admin =
+          !!session.user.name && ["casper"].includes(session.user.name);
       }
 
       return session;
@@ -44,7 +52,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         return {
           ...user,
-          id: user.id.toString(),
         };
       },
     }),

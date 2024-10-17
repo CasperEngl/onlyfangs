@@ -98,12 +98,12 @@ export function WowRandomizer(props: {
   };
 
   return (
-    <div className="min-h-screen bg-[#2C1B0F] bg-cover bg-center flex items-center justify-center">
-      <div className="bg-[#3D2817] px-24 py-16 rounded-lg shadow-lg max-w-3xl w-full">
-        <h1 className="text-2xl font-bold text-[#FFD700] text-center mb-2">
+    <div className="min-h-screen bg-background bg-cover bg-center flex items-center justify-center">
+      <div className="bg-card px-24 py-16 rounded-lg shadow-lg max-w-3xl w-full">
+        <h1 className="text-2xl font-bold text-primary text-center mb-2">
           World of Warcraft
         </h1>
-        <h2 className="text-6xl font-semibold text-[#E6A64C] text-center mb-8">
+        <h2 className="text-6xl font-semibold text-secondary text-center mb-8">
           OnlyFangs
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -126,8 +126,8 @@ export function WowRandomizer(props: {
             )}
             <Card
               className={cn(
-                "relative overflow-hidden group h-64 border-[#5C3D24] bg-[#3D2817]",
-                !selectedRace && "cursor-pointer hover:bg-[#4E3320]"
+                "relative overflow-hidden group h-64 border-border bg-card",
+                !selectedRace && "cursor-pointer hover:bg-accent"
               )}
               onClick={randomizeRace}
             >
@@ -143,16 +143,16 @@ export function WowRandomizer(props: {
                       : "none",
                 }}
               />
-              <div className="relative z-10 p-6 bg-[#3D2817] bg-opacity-75 h-full flex flex-col">
-                <h2 className="text-2xl font-semibold text-[#A67C52] mb-4 text-center">
+              <div className="relative z-10 p-6 bg-card bg-opacity-75 h-full flex flex-col">
+                <h2 className="text-2xl font-semibold text-secondary mb-4 text-center">
                   Race
                 </h2>
                 <div className="flex-grow flex items-center justify-center">
                   <span
                     className={`text-5xl font-bold ${
                       raceMutation.isPending
-                        ? "text-[#8BC34A]"
-                        : "text-[#E6A64C]"
+                        ? "text-[var(--wow-randomizing)]"
+                        : "text-secondary"
                     }`}
                   >
                     {selectedRace
@@ -164,7 +164,7 @@ export function WowRandomizer(props: {
                 </div>
                 <div
                   className={cn(
-                    "mt-4 text-center text-[#D2B48C]",
+                    "mt-4 text-center text-foreground",
                     props.playerRace || raceMutation.isSuccess
                       ? "invisible"
                       : ""
@@ -196,8 +196,8 @@ export function WowRandomizer(props: {
             )}
             <Card
               className={cn(
-                "relative overflow-hidden group h-64 border-[#5C3D24] bg-[#3D2817]",
-                !selectedClass && "cursor-pointer hover:bg-[#4E3320]"
+                "relative overflow-hidden group h-64 border-border bg-card",
+                !selectedClass && "cursor-pointer hover:bg-accent"
               )}
               onClick={randomizeClass}
             >
@@ -213,16 +213,16 @@ export function WowRandomizer(props: {
                       : "none",
                 }}
               />
-              <div className="relative z-10 p-6 bg-[#3D2817] bg-opacity-75 h-full flex flex-col">
-                <h2 className="text-2xl font-semibold text-[#C68642] mb-4 text-center">
+              <div className="relative z-10 p-6 bg-card bg-opacity-75 h-full flex flex-col">
+                <h2 className="text-2xl font-semibold text-secondary mb-4 text-center">
                   Class
                 </h2>
                 <div className="flex-grow flex items-center justify-center">
                   <span
                     className={`text-5xl font-bold ${
                       classMutation.isPending
-                        ? "text-[#8BC34A]"
-                        : "text-[#E6A64C]"
+                        ? "text-[var(--wow-randomizing)]"
+                        : "text-secondary"
                     }`}
                   >
                     {selectedClass
@@ -234,25 +234,22 @@ export function WowRandomizer(props: {
                 </div>
                 <div
                   className={cn(
-                    "mt-4 text-center text-[#D2B48C]",
+                    "mt-4 text-center text-foreground",
                     props.playerRace || raceMutation.isSuccess
                       ? "invisible"
                       : ""
                   )}
                 >
-                  <div className="mt-4 text-center text-[#D2B48C]">
-                    {classMutation.isPending
-                      ? "Randomizing..."
-                      : "Click to randomize"}
-                  </div>
+                  {classMutation.isPending
+                    ? "Randomizing..."
+                    : "Click to randomize"}
                 </div>
               </div>
             </Card>
           </div>
         </div>
 
-        {/* Update the help text color */}
-        <div className="mt-8 text-center text-[#A67C52] text-sm">
+        <div className="mt-8 text-center text-muted-foreground text-sm">
           Need to reset your race/class selection? Contact an admin for
           assistance.
         </div>

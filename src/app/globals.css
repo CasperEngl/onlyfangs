@@ -9,67 +9,81 @@
       "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
       "Noto Color Emoji";
 
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    /* Integrate WoW colors into the main color scheme */
+    --background: 34 40% 12%;
+    --foreground: 39 29% 68%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 34 25% 17%;
+    --muted-foreground: 39 15% 48%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover: 34 40% 12%;
+    --popover-foreground: 39 29% 68%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 34 28% 25%;
+    --input: 34 28% 25%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card: 34 25% 17%;
+    --card-foreground: 39 29% 68%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 46 100% 50%;
+    --primary-foreground: 34 40% 12%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 39 43% 47%;
+    --secondary-foreground: 34 40% 12%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 210 40% 98%;
-
-    --ring: 215 20.2% 65.1%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-
-    --muted: 223 47% 11%;
-    --muted-foreground: 215.4 16.3% 56.9%;
-
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
-
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
-
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
-
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
+    --accent: 34 28% 25%;
+    --accent-foreground: 39 29% 68%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --ring: 216 34% 17%;
+    --ring: 34 28% 25%;
+
+    --radius: 0.5rem;
+
+    /* Keep the original WoW theme variables for specific use cases */
+    --wow-background: #2C1B0F;
+    --wow-card-background: #3D2817;
+    --wow-card-hover: #4E3320;
+    --wow-border: #5C3D24;
+    --wow-title: #FFD700;
+    --wow-subtitle: #E6A64C;
+    --wow-card-button-heading: #A67C52;
+    --wow-text: #D2B48C;
+    --wow-help-text: #A67C52;
+    --wow-randomizing: #8BC34A;
+  }
+
+  .dark {
+    /* Update dark theme to match WoW colors */
+    --background: 34 40% 12%;
+    --foreground: 39 29% 68%;
+
+    --muted: 34 25% 17%;
+    --muted-foreground: 39 15% 48%;
+
+    --accent: 34 28% 25%;
+    --accent-foreground: 39 29% 68%;
+
+    --popover: 34 40% 12%;
+    --popover-foreground: 39 29% 68%;
+
+    --border: 34 28% 25%;
+    --input: 34 28% 25%;
+
+    --card: 34 25% 17%;
+    --card-foreground: 39 29% 68%;
+
+    --primary: 46 100% 50%;
+    --primary-foreground: 34 40% 12%;
+
+    --secondary: 39 43% 47%;
+    --secondary-foreground: 34 40% 12%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 34 28% 25%;
 
     --radius: 0.5rem;
   }

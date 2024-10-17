@@ -12,23 +12,23 @@ import {
 
 const alphanumeric = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 10);
 
-export default function Invite() {
-  const session = auth();
+export default async function Invite() {
+  const session = await auth();
 
-  if (!session) {
+  if (!session?.admin) {
     return redirect("/api/auth/signin");
   }
 
   const inviteCode = alphanumeric(20).toUpperCase();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+      <Card className="w-full max-w-md border-[var(--wow-border)] bg-[var(--wow-card-background)]">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-center text-2xl font-bold text-[var(--wow-title)]">
             Invite Participant to OnlyFangs
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-[var(--wow-text)]">
             Use this form to generate an invite code and invite a new
             participant to OnlyFangs.
           </CardDescription>
