@@ -1,19 +1,18 @@
-import mysql from "mysql2/promise";
+import { Pool, PoolConfig } from "pg";
 
-const config =
+const config = (
   process.env.NODE_ENV === "production"
     ? {
         host: "localhost",
         user: "root",
         password: "rootpassword",
-        port: 3306,
-        database: "onlyfangs",
+        port: 5432,
+        database: "postgres",
       }
     : {
-        uri: process.env.DATABASE_URL,
-        database: "onlyfangs",
-        connectionLimit: 10,
-      };
+        connectionString: process.env.DATABASE_URL,
+      }
+) satisfies PoolConfig;
 
-// Create a MySQL connection pool
-export const pool = mysql.createPool(config);
+// Create a PostgreSQL connection pool
+export const pool = new Pool(config);

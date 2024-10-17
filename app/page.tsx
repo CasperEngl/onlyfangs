@@ -14,6 +14,6 @@ export default async function Home() {
     <WowRandomizer
       playerClass={playerClass?.slug}
       playerRace={playerRace?.slug}
-    ></WowRandomizer>
+    />
   );
 }

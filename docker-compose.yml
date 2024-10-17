@@ -6,21 +6,22 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://root:rootpassword@db:3306/onlyfangs
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/onlyfangs
     depends_on:
       - db
 
   db:
-    image: mysql:8.0
+    image: postgres:17
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: onlyfangs
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
       - ./app/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
 volumes:
-  mysql_data:
+  postgres_data:

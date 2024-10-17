@@ -1,6 +1,8 @@
-import mysql, { RowDataPacket } from "mysql2/promise";
+import { QueryArrayConfig, QueryArrayResult } from "pg";
 
-type Client = mysql.Connection | mysql.Pool;
+interface Client {
+    query: (config: QueryArrayConfig) => Promise<QueryArrayResult>;
+}
 
 export const getPlayersQuery = `-- name: GetPlayers :many
 SELECT
@@ -18,12 +20,12 @@ export interface GetPlayersRow {
 }
 
 export async function getPlayers(client: Client): Promise<GetPlayersRow[]> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getPlayersQuery,
+    const result = await client.query({
+        text: getPlayersQuery,
         values: [],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    return rows.map(row => {
+    return result.rows.map(row => {
         return {
             id: row[0],
             username: row[1],
@@ -41,7 +43,7 @@ SELECT
 FROM
   players
 WHERE
-  id = ?`;
+  id = $1`;
 
 export interface GetPlayerByIdArgs {
     id: number;
@@ -57,15 +59,15 @@ export interface GetPlayerByIdRow {
 }
 
 export async function getPlayerById(client: Client, args: GetPlayerByIdArgs): Promise<GetPlayerByIdRow | null> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getPlayerByIdQuery,
+    const result = await client.query({
+        text: getPlayerByIdQuery,
         values: [args.id],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    if (rows.length !== 1) {
+    if (result.rows.length !== 1) {
         return null;
     }
-    const row = rows[0];
+    const row = result.rows[0];
     return {
         id: row[0],
         username: row[1],
@@ -81,7 +83,7 @@ UPDATE invite_codes
 SET
   used_at = CURRENT_TIMESTAMP
 WHERE
-  code = ?
+  code = $1
   AND used_at IS NULL`;
 
 export interface ConsumeInviteCodeArgs {
@@ -90,8 +92,9 @@ export interface ConsumeInviteCodeArgs {
 
 export async function consumeInviteCode(client: Client, args: ConsumeInviteCodeArgs): Promise<void> {
     await client.query({
-        sql: consumeInviteCodeQuery,
-        values: [args.code]
+        text: consumeInviteCodeQuery,
+        values: [args.code],
+        rowMode: "array"
     });
 }
 
@@ -107,7 +110,7 @@ WHERE
     FROM
       invite_codes
     WHERE
-      code = ?
+      code = $1
   )`;
 
 export interface GetPlayerByInviteCodeArgs {
@@ -124,15 +127,15 @@ export interface GetPlayerByInviteCodeRow {
 }
 
 export async function getPlayerByInviteCode(client: Client, args: GetPlayerByInviteCodeArgs): Promise<GetPlayerByInviteCodeRow | null> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getPlayerByInviteCodeQuery,
+    const result = await client.query({
+        text: getPlayerByInviteCodeQuery,
         values: [args.code],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    if (rows.length !== 1) {
+    if (result.rows.length !== 1) {
         return null;
     }
-    const row = rows[0];
+    const row = result.rows[0];
     return {
         id: row[0],
         username: row[1],
@@ -148,17 +151,17 @@ INSERT INTO
   players (username, invite_code_id, race_id, class_id)
 VALUES
   (
-    ?,
+    $1,
     (
       SELECT
         id
       FROM
         invite_codes
       WHERE
-        code = ?
+        code = $2
     ),
-    ?,
-    ?
+    $3,
+    $4
   )`;
 
 export interface CreatePlayerArgs {
@@ -171,7 +174,7 @@ export interface CreatePlayerArgs {
 export const deletePlayerQuery = `-- name: DeletePlayer :exec
 DELETE FROM players
 WHERE
-  id = ?`;
+  id = $1`;
 
 export interface DeletePlayerArgs {
     id: number;
@@ -179,17 +182,18 @@ export interface DeletePlayerArgs {
 
 export async function deletePlayer(client: Client, args: DeletePlayerArgs): Promise<void> {
     await client.query({
-        sql: deletePlayerQuery,
-        values: [args.id]
+        text: deletePlayerQuery,
+        values: [args.id],
+        rowMode: "array"
     });
 }
 
 export const setPlayerRaceQuery = `-- name: SetPlayerRace :exec
 UPDATE players
 SET
-  race_id = ?
+  race_id = $1
 WHERE
-  id = ?`;
+  id = $2`;
 
 export interface SetPlayerRaceArgs {
     raceId: number | null;
@@ -198,17 +202,18 @@ export interface SetPlayerRaceArgs {
 
 export async function setPlayerRace(client: Client, args: SetPlayerRaceArgs): Promise<void> {
     await client.query({
-        sql: setPlayerRaceQuery,
-        values: [args.raceId, args.id]
+        text: setPlayerRaceQuery,
+        values: [args.raceId, args.id],
+        rowMode: "array"
     });
 }
 
 export const setPlayerClassQuery = `-- name: SetPlayerClass :exec
 UPDATE players
 SET
-  class_id = ?
+  class_id = $1
 WHERE
-  id = ?`;
+  id = $2`;
 
 export interface SetPlayerClassArgs {
     classId: number | null;
@@ -217,8 +222,9 @@ export interface SetPlayerClassArgs {
 
 export async function setPlayerClass(client: Client, args: SetPlayerClassArgs): Promise<void> {
     await client.query({
-        sql: setPlayerClassQuery,
-        values: [args.classId, args.id]
+        text: setPlayerClassQuery,
+        values: [args.classId, args.id],
+        rowMode: "array"
     });
 }
 
@@ -230,7 +236,7 @@ FROM
   players
   INNER JOIN races ON races.id = players.race_id
 WHERE
-  players.id = ?`;
+  players.id = $1`;
 
 export interface GetPlayerRaceArgs {
     id: number;
@@ -242,15 +248,15 @@ export interface GetPlayerRaceRow {
 }
 
 export async function getPlayerRace(client: Client, args: GetPlayerRaceArgs): Promise<GetPlayerRaceRow | null> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getPlayerRaceQuery,
+    const result = await client.query({
+        text: getPlayerRaceQuery,
         values: [args.id],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    if (rows.length !== 1) {
+    if (result.rows.length !== 1) {
         return null;
     }
-    const row = rows[0];
+    const row = result.rows[0];
     return {
         name: row[0],
         slug: row[1]
@@ -265,7 +271,7 @@ FROM
   players
   INNER JOIN classes ON classes.id = players.class_id
 WHERE
-  players.id = ?`;
+  players.id = $1`;
 
 export interface GetPlayerClassArgs {
     id: number;
@@ -277,15 +283,15 @@ export interface GetPlayerClassRow {
 }
 
 export async function getPlayerClass(client: Client, args: GetPlayerClassArgs): Promise<GetPlayerClassRow | null> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getPlayerClassQuery,
+    const result = await client.query({
+        text: getPlayerClassQuery,
         values: [args.id],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    if (rows.length !== 1) {
+    if (result.rows.length !== 1) {
         return null;
     }
-    const row = rows[0];
+    const row = result.rows[0];
     return {
         name: row[0],
         slug: row[1]
@@ -305,12 +311,12 @@ export interface GetRacesRow {
 }
 
 export async function getRaces(client: Client): Promise<GetRacesRow[]> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getRacesQuery,
+    const result = await client.query({
+        text: getRacesQuery,
         values: [],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    return rows.map(row => {
+    return result.rows.map(row => {
         return {
             id: row[0],
             name: row[1],
@@ -332,12 +338,12 @@ export interface GetClassesRow {
 }
 
 export async function getClasses(client: Client): Promise<GetClassesRow[]> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getClassesQuery,
+    const result = await client.query({
+        text: getClassesQuery,
         values: [],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    return rows.map(row => {
+    return result.rows.map(row => {
         return {
             id: row[0],
             name: row[1],
@@ -352,7 +358,7 @@ SELECT
 FROM
   invite_codes
 WHERE
-  code = ?`;
+  code = $1`;
 
 export interface GetInviteCodeArgs {
     code: string;
@@ -367,15 +373,15 @@ export interface GetInviteCodeRow {
 }
 
 export async function getInviteCode(client: Client, args: GetInviteCodeArgs): Promise<GetInviteCodeRow | null> {
-    const [rows] = await client.query<RowDataPacket[]>({
-        sql: getInviteCodeQuery,
+    const result = await client.query({
+        text: getInviteCodeQuery,
         values: [args.code],
-        rowsAsArray: true
+        rowMode: "array"
     });
-    if (rows.length !== 1) {
+    if (result.rows.length !== 1) {
         return null;
     }
-    const row = rows[0];
+    const row = result.rows[0];
     return {
         id: row[0],
         code: row[1],
