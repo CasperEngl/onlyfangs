@@ -5,7 +5,9 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 
 const ReactQueryDevtools = dynamic(() =>
-  import("@tanstack/react-query-devtools").then((mod) => mod.ReactQueryDevtools)
+  import("@tanstack/react-query-devtools").then((mod) => ({
+    default: mod.ReactQueryDevtools
+  }))
 );
 
 export function Providers({ children }: { children: React.ReactNode }) {

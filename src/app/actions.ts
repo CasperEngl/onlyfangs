@@ -27,7 +27,7 @@ export async function selectRandomRace() {
 
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  const inviteCode = cookies().get("invite_code")?.value;
+  const inviteCode = (await cookies()).get("invite_code")?.value;
   if (!inviteCode) {
     throw new Error("No invite code found");
   }
@@ -55,7 +55,7 @@ export async function selectRandomRace() {
 }
 
 export async function selectRandomClass() {
-  const inviteCode = cookies().get("invite_code")?.value;
+  const inviteCode = (await cookies()).get("invite_code")?.value;
 
   if (!inviteCode) {
     throw new Error("No invite code found");
