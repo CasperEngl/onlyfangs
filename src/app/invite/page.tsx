@@ -1,4 +1,4 @@
-import { customAlphabet, nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
 import { redirect } from "next/navigation";
 import { InviteForm } from "~/app/invite/invite-form";
 import { auth } from "~/auth";
