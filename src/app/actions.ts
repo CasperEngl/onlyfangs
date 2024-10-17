@@ -9,9 +9,9 @@ import {
   getRaces,
   setPlayerClass,
   setPlayerRace,
-} from "~/app/db";
-import { pool } from "~/app/db/client";
-import { raceClassCombos } from "~/app/race-class-combos";
+} from "~/src/app/db";
+import { pool } from "~/src/app/db/client";
+import { raceClassCombos } from "~/src/app/race-class-combos";
 
 export async function selectRandomRace() {
   const races = await getRaces(pool);
