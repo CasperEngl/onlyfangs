@@ -10,7 +10,7 @@ export default async function Home() {
   console.log("app.tsx: session", session);
 
   if (!session?.user?.id) {
-    return redirect("/api/auth/signin");
+    return redirect("/login");
   }
 
   const playerClass = await getPlayerClass(pool, {

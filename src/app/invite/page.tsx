@@ -16,7 +16,7 @@ export default async function Invite() {
   const session = await auth();
 
   if (!session?.admin) {
-    return redirect("/api/auth/signin");
+    return redirect("/login");
   }
 
   const inviteCode = alphanumeric(20).toUpperCase();

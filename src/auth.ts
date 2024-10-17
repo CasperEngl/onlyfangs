@@ -52,8 +52,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         return {
           ...user,
+          id: user.id.toString(),
         };
       },
     }),
   ],
+  pages: {
+    signIn: "/login",
+  },
 });
